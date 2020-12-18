@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在本教程中，我们将介绍servlet监听器，servlet监听器的好处，我们可以对监听器执行的一些常见任务，servlet API监听器接口和Event对象。 最后，我们将创建一个简单的Web项目，以显示ServletContext，Session和ServletRequest的常用Listener实现示例。 1. 为什么需要Servlet Listener我们知道使用ServletContext">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java EE(4) - Servlet Listener">
+<meta property="og:url" content="http://example.com/2018/10/08/2018-10-08-Servlet-Listener/index.html">
+<meta property="og:site_name" content="Road To Excelsior">
+<meta property="og:description" content="在本教程中，我们将介绍servlet监听器，servlet监听器的好处，我们可以对监听器执行的一些常见任务，servlet API监听器接口和Event对象。 最后，我们将创建一个简单的Web项目，以显示ServletContext，Session和ServletRequest的常用Listener实现示例。 1. 为什么需要Servlet Listener我们知道使用ServletContext">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/assets/posts/Servlet-Listener/Servlet-Listener-Example.png">
+<meta property="article:published_time" content="2018-10-08T02:53:18.000Z">
+<meta property="article:modified_time" content="2020-12-17T16:41:53.125Z">
+<meta property="article:author" content="Robinson">
+<meta property="article:tag" content="JavaEE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/assets/posts/Servlet-Listener/Servlet-Listener-Example.png">
+
+<link rel="canonical" href="http://example.com/2018/10/08/2018-10-08-Servlet-Listener/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Java EE(4) - Servlet Listener | Road To Excelsior</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Road To Excelsior</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/10/08/2018-10-08-Servlet-Listener/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java EE(4) - Servlet Listener
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-10-08 10:53:18" itemprop="dateCreated datePublished" datetime="2018-10-08T10:53:18+08:00">2018-10-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-18 00:41:53" itemprop="dateModified" datetime="2020-12-18T00:41:53+08:00">2020-12-18</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在本教程中，我们将介绍servlet监听器，servlet监听器的好处，我们可以对监听器执行的一些常见任务，servlet API监听器接口和Event对象。 最后，我们将创建一个简单的Web项目，以显示ServletContext，Session和ServletRequest的常用Listener实现示例。</p>
+<h2 id="1-为什么需要Servlet-Listener"><a href="#1-为什么需要Servlet-Listener" class="headerlink" title="1. 为什么需要Servlet Listener"></a>1. 为什么需要Servlet Listener</h2><p>我们知道使用ServletContext，我们可以创建一个具有所有其他servlet可以访问的应用程序范围的属性，但我们可以仅在部署描述符（web.xml）中将ServletContext init参数初始化为String。 如果我们的应用程序是面向数据库的，并且我们想在ServletContext中为数据库连接设置一个属性，该怎么办？ 如果您的应用程序有一个入口点（用户登录），那么您可以在第一个servlet请求中执行此操作，但如果我们有多个入口点，那么在任何地方执行它将导致大量代码冗余。 此外，如果数据库已关闭或未正确配置，我们将无法知道，直到第一个客户端请求到达服务器。 为了处理这些场景，servlet API提供了我们可以实现和配置的侦听器接口，以监听事件并执行某些操作。</p>
+<p><em>Event</em>是某种事情的发生，在Web应用程序世界中，事件可以是应用程序的初始化，销毁应用程序，来自客户端的请求，创建/销毁会话，会话中的属性修改等。</p>
+<p><em>Servlet API</em>提供了不同类型的监听器接口，我们可以在web.xml中实现和配置这些接口，以便在发生特定事件时处理某些事务。 例如，在上面的场景中，我们可以为应用程序启动事件创建一个Listener，以读取上下文init参数并创建数据库连接并将其设置为context属性以供其他资源使用。</p>
+<h2 id="2-Servlet监听器接口以及事件对象"><a href="#2-Servlet监听器接口以及事件对象" class="headerlink" title="2. Servlet监听器接口以及事件对象"></a>2. Servlet监听器接口以及事件对象</h2><p>Servlet API为不同类型的事件提供不同类型的侦听器。 监听器接口声明方法可以处理一组类似的事件，例如我们有ServletContext监听器来监听上下文的启动和关闭事件。 侦听器接口中的每个方法都将Event对象作为输入。 Event对象用作包装器，为侦听器提供特定对象。</p>
+<p>Servlet API提供以下事件对象：</p>
+<ol>
+<li><em>javax.servlet.AsyncEvnet</em> - 在ServletRequest上启动的异步操作（通过调用ServletRequest.startAsync或ServletRequest.startAsync（ServletRequest，ServletResponse））完成，超时或产生错误时触发的事件。</li>
+<li><em>javax.servlet.http.HttpSessionBindingEvent</em> - 此类型的事件要么发送到在会话中绑定或取消绑定时实现HttpSessionBindingListener的对象，要么发送到在任何属性绑定，未绑定或在会话中替换时已在web.xml中配置的HttpSessionAttributeListener。<br>会话通过调用HttpSession.setAttribute来绑定对象，并通过调用HttpSession.removeAttribute来解除绑定对象。<br>当从会话中删除对象时，我们可以将此事件用于清理活动。</li>
+<li><em>javax.servlet.http.HttpSessionEvent</em> - 这是表示Web应用程序中会话更改的事件通知类。</li>
+<li><em>javax.servlet.ServletContextAttributeEvent</em> - 有关Web应用程序的ServletContext属性更改的通知事件类。</li>
+<li><em>javax.servlet.ServletContextEvent</em> - 这是有关Web应用程序的servlet上下文更改的通知事件类。</li>
+<li><em>javax.servlet.ServletRequestEvent</em> - 此类事件表示ServletRequest的生命周期事件。事件的来源是此Web应用程序的ServletContext。</li>
+<li><em>javax.servlet.ServletRequestAttributeEvent</em> - 这是用于通知应用程序中servlet请求的属性更改的事件类。</li>
+</ol>
+<p>Servlet API提供以下监听器接口。</p>
+<ol>
+<li><em>javax.servlet.AsyncListener</em> - 监听器，如果在已添加监听器的ServletRequest上启动的异步操作已完成，超时或导致错误，将通知该监听器。</li>
+<li><em>javax.servlet.ServletContextListener</em> - 用于接收有关ServletContext生命周期更改的通知事件的接口。</li>
+<li><em>javax.servlet.ServletContextAttributeListener</em> - 用于接收有关ServletContext属性更改的通知事件的接口。</li>
+<li><em>javax.servlet.ServletRequestListener</em> - 用于接收有关进入和退出Web应用程序范围的请求的通知事件的接口。</li>
+<li><em>javax.servlet.ServletRequestAttributeListener</em> - 用于接收有关ServletRequest属性更改的通知事件的接口。</li>
+<li><em>javax.servlet.http.HttpSessionListener</em> - 用于接收有关HttpSession生命周期更改的通知事件的接口。</li>
+<li><em>javax.servlet.http.HttpSessionBindingListener</em> - 用户会话中的对象绑定或者解绑时的时间接口</li>
+<li><em>javax.servlet.http.HttpSessionAttributeListener</em> - 用于接收有关HttpSession属性更改的通知事件的接口。</li>
+<li><em>javax.servlet.http.HttpSessionActivationListener</em> - 绑定到会话的对象可以侦听容器事件，通知它们会话将被钝化并且会话将被激活。 需要在VM之间迁移会话或持久化会话的容器被要求通知绑定到实现HttpSessionActivationListener的会话的所有属性。</li>
+</ol>
+<h2 id="3-Servlet-Listener-配置"><a href="#3-Servlet-Listener-配置" class="headerlink" title="3. Servlet Listener 配置"></a>3. Servlet Listener 配置</h2><p>我们可以使用@WebListener注释将类声明为Listener，但是该类应该实现一个或多个Listener接口。</p>
+<p>我们可以在web.xml中定义监听器如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span></span><br><span class="line">    com.journaldev.listener.AppContextListener</span><br><span class="line">    <span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="4-Servlet-Listener-Example"><a href="#4-Servlet-Listener-Example" class="headerlink" title="4. Servlet Listener Example"></a>4. Servlet Listener Example</h2><p>让我们创建一个简单的Web应用程序来查看运行中的servlet侦听器。我们将在Eclipse ServletListenerExample中创建动态Web项目，这些项目结构将如下图所示。</p>
+<p><img src="/assets/posts/Servlet-Listener/Servlet-Listener-Example.png"></p>
+<p>部署描述符web.xml如下，其中定义了若干个上下文初始化参数，以及配置监听器等。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee&quot;</span> <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd&quot;</span> <span class="attr">id</span>=<span class="string">&quot;WebApp_ID&quot;</span> <span class="attr">version</span>=<span class="string">&quot;3.0&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">display-name</span>&gt;</span>ServletListenerExample<span class="tag">&lt;/<span class="name">display-name</span>&gt;</span></span><br><span class="line">  </span><br><span class="line">  <span class="tag">&lt;<span class="name">context-param</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>DBUSER<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>pankaj<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">context-param</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>DBPWD<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>password<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">context-param</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>DBURL<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>jdbc:mysql://localhost/mysql_db<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></span><br><span class="line">  </span><br><span class="line">  <span class="tag">&lt;<span class="name">listener</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.journaldev.listener.AppContextListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">listener</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">listener</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.journaldev.listener.AppContextAttributeListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">listener</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">listener</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.journaldev.listener.MySessionListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">listener</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">listener</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.journaldev.listener.MyServletRequestListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">listener</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><em>DBConnectionManager</em>: 这是数据库连接的类，为简单起见，我没有提供实际数据库连接的代码。我们将此对象设置为servlet上下文的属性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.db;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.sql.Connection;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DBConnectionManager</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> String dbURL;</span><br><span class="line">	<span class="keyword">private</span> String user;</span><br><span class="line">	<span class="keyword">private</span> String password;</span><br><span class="line">	<span class="keyword">private</span> Connection con;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">DBConnectionManager</span><span class="params">(String url, String u, String p)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.dbURL=url;</span><br><span class="line">		<span class="keyword">this</span>.user=u;</span><br><span class="line">		<span class="keyword">this</span>.password=p;</span><br><span class="line">		<span class="comment">//create db connection now</span></span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> Connection <span class="title">getConnection</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.con;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">closeConnection</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="comment">//close DB connection here</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><em>MyServlet</em>: 一个简单的servlet类，我将在其中使用会话，属性等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.PrintWriter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebServlet(&quot;/MyServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">       </span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">			ServletContext ctx = request.getServletContext();</span><br><span class="line">			ctx.setAttribute(<span class="string">&quot;User&quot;</span>, <span class="string">&quot;Pankaj&quot;</span>);</span><br><span class="line">			String user = (String) ctx.getAttribute(<span class="string">&quot;User&quot;</span>);</span><br><span class="line">			ctx.removeAttribute(<span class="string">&quot;User&quot;</span>);</span><br><span class="line">			</span><br><span class="line">			HttpSession session = request.getSession();</span><br><span class="line">			session.invalidate();</span><br><span class="line">			</span><br><span class="line">			PrintWriter out = response.getWriter();</span><br><span class="line">			out.write(<span class="string">&quot;Hi &quot;</span>+user);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在我们将实现监听器类，我为常用的监听器提供示例监听器类 - ServletContextListener，ServletContextAttributeListener，ServletRequestListener和HttpSessionListener。</p>
+<h2 id="5-ServletContextListener"><a href="#5-ServletContextListener" class="headerlink" title="5. ServletContextListener"></a>5. ServletContextListener</h2><p>我们将读取servlet context init参数以创建DBConnectionManager对象并将其设置为ServletContext对象的属性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContextEvent;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContextListener;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebListener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.journaldev.db.DBConnectionManager;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebListener</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppContextListener</span> <span class="keyword">implements</span> <span class="title">ServletContextListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextInitialized</span><span class="params">(ServletContextEvent servletContextEvent)</span> </span>&#123;</span><br><span class="line">    	ServletContext ctx = servletContextEvent.getServletContext();</span><br><span class="line">    	</span><br><span class="line">    	String url = ctx.getInitParameter(<span class="string">&quot;DBURL&quot;</span>);</span><br><span class="line">    	String u = ctx.getInitParameter(<span class="string">&quot;DBUSER&quot;</span>);</span><br><span class="line">    	String p = ctx.getInitParameter(<span class="string">&quot;DBPWD&quot;</span>);</span><br><span class="line">    	</span><br><span class="line">    	<span class="comment">//create database connection from init parameters and set it to context</span></span><br><span class="line">    	DBConnectionManager dbManager = <span class="keyword">new</span> DBConnectionManager(url, u, p);</span><br><span class="line">    	ctx.setAttribute(<span class="string">&quot;DBManager&quot;</span>, dbManager);</span><br><span class="line">    	System.out.println(<span class="string">&quot;Database connection initialized for Application.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextDestroyed</span><span class="params">(ServletContextEvent servletContextEvent)</span> </span>&#123;</span><br><span class="line">    	ServletContext ctx = servletContextEvent.getServletContext();</span><br><span class="line">    	DBConnectionManager dbManager = (DBConnectionManager) ctx.getAttribute(<span class="string">&quot;DBManager&quot;</span>);</span><br><span class="line">    	dbManager.closeConnection();</span><br><span class="line">    	System.out.println(<span class="string">&quot;Database connection closed for Application.&quot;</span>);</span><br><span class="line">    	</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-ServletContextAttributeListener"><a href="#6-ServletContextAttributeListener" class="headerlink" title="6. ServletContextAttributeListener"></a>6. ServletContextAttributeListener</h2><p>在servlet上下文中添加，删除或替换属性时记录事件的简单实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContextAttributeEvent;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContextAttributeListener;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebListener;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebListener</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppContextAttributeListener</span> <span class="keyword">implements</span> <span class="title">ServletContextAttributeListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">attributeAdded</span><span class="params">(ServletContextAttributeEvent servletContextAttributeEvent)</span> </span>&#123;</span><br><span class="line">    	System.out.println(<span class="string">&quot;ServletContext attribute added::&#123;&quot;</span>+servletContextAttributeEvent.getName()+<span class="string">&quot;,&quot;</span>+servletContextAttributeEvent.getValue()+<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">attributeReplaced</span><span class="params">(ServletContextAttributeEvent servletContextAttributeEvent)</span> </span>&#123;</span><br><span class="line">    	System.out.println(<span class="string">&quot;ServletContext attribute replaced::&#123;&quot;</span>+servletContextAttributeEvent.getName()+<span class="string">&quot;,&quot;</span>+servletContextAttributeEvent.getValue()+<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">attributeRemoved</span><span class="params">(ServletContextAttributeEvent servletContextAttributeEvent)</span> </span>&#123;</span><br><span class="line">    	System.out.println(<span class="string">&quot;ServletContext attribute removed::&#123;&quot;</span>+servletContextAttributeEvent.getName()+<span class="string">&quot;,&quot;</span>+servletContextAttributeEvent.getValue()+<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-HttpSessionListener"><a href="#7-HttpSessionListener" class="headerlink" title="7. HttpSessionListener"></a>7. HttpSessionListener</h2><p>创建或销毁会话时记录事件的简单实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebListener;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSessionEvent;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSessionListener;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebListener</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySessionListener</span> <span class="keyword">implements</span> <span class="title">HttpSessionListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sessionCreated</span><span class="params">(HttpSessionEvent sessionEvent)</span> </span>&#123;</span><br><span class="line">    	System.out.println(<span class="string">&quot;Session Created:: ID=&quot;</span>+sessionEvent.getSession().getId());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sessionDestroyed</span><span class="params">(HttpSessionEvent sessionEvent)</span> </span>&#123;</span><br><span class="line">    	System.out.println(<span class="string">&quot;Session Destroyed:: ID=&quot;</span>+sessionEvent.getSession().getId());</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-ServletRequestListener"><a href="#8-ServletRequestListener" class="headerlink" title="8. ServletRequestListener"></a>8. ServletRequestListener</h2><p>ServletRequestListener接口的简单实现，用于在初始化和销毁​​请求时记录ServletRequest IP地址。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequestEvent;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequestListener;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebListener;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebListener</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyServletRequestListener</span> <span class="keyword">implements</span> <span class="title">ServletRequestListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">requestDestroyed</span><span class="params">(ServletRequestEvent servletRequestEvent)</span> </span>&#123;</span><br><span class="line">    	ServletRequest servletRequest = servletRequestEvent.getServletRequest();</span><br><span class="line">    	System.out.println(<span class="string">&quot;ServletRequest destroyed. Remote IP=&quot;</span>+servletRequest.getRemoteAddr());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">requestInitialized</span><span class="params">(ServletRequestEvent servletRequestEvent)</span> </span>&#123;</span><br><span class="line">    	ServletRequest servletRequest = servletRequestEvent.getServletRequest();</span><br><span class="line">    	System.out.println(<span class="string">&quot;ServletRequest initialized. Remote IP=&quot;</span>+servletRequest.getRemoteAddr());</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="9-运行程序"><a href="#9-运行程序" class="headerlink" title="9. 运行程序"></a>9. 运行程序</h2><p>现在，当我们部署应用程序并使用URL <a href="http://localhost：8080/ServletListenerExample/MyServlet">http://localhost：8080/ServletListenerExample/MyServlet</a> 在浏览器中访问MyServlet时，我们将在服务器日志文件中看到以下日志。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">ServletContext attribute added::&#123;DBManager,com.journaldev.db.DBConnectionManager@4def3d1b&#125;</span><br><span class="line">Database connection initialized for Application.</span><br><span class="line">ServletContext attribute added::&#123;org.apache.jasper.compiler.TldLocationsCache,org.apache.jasper.compiler.TldLocationsCache@1594df96&#125;</span><br><span class="line"></span><br><span class="line">ServletRequest initialized. Remote IP&#x3D;0:0:0:0:0:0:0:1%0</span><br><span class="line">ServletContext attribute added::&#123;User,Pankaj&#125;</span><br><span class="line">ServletContext attribute removed::&#123;User,Pankaj&#125;</span><br><span class="line">Session Created:: ID&#x3D;8805E7AE4CCCF98AFD60142A6B300CD6</span><br><span class="line">Session Destroyed:: ID&#x3D;8805E7AE4CCCF98AFD60142A6B300CD6</span><br><span class="line">ServletRequest destroyed. Remote IP&#x3D;0:0:0:0:0:0:0:1%0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ServletRequest initialized. Remote IP&#x3D;0:0:0:0:0:0:0:1%0</span><br><span class="line">ServletContext attribute added::&#123;User,Pankaj&#125;</span><br><span class="line">ServletContext attribute removed::&#123;User,Pankaj&#125;</span><br><span class="line">Session Created:: ID&#x3D;88A7A1388AB96F611840886012A4475F</span><br><span class="line">Session Destroyed:: ID&#x3D;88A7A1388AB96F611840886012A4475F</span><br><span class="line">ServletRequest destroyed. Remote IP&#x3D;0:0:0:0:0:0:0:1%0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Database connection closed for Application.</span><br></pre></td></tr></table></figure>
+
+<p>注意日志序列，它按执行顺序排列。您将关闭应用程序或关闭容器时将显示最后一个日志。</p>
+<h2 id="10-思考和总结"><a href="#10-思考和总结" class="headerlink" title="10. 思考和总结"></a>10. 思考和总结</h2><p>我们学习分析了Java EE中的监听器的使用场景，作用和用法，其中需要注意的是，我刚开始把这个当成了Spring中的内容了，实际上Spring的核心就只有 IOC 以及 AOP 而已，其他的均为基于此二的扩展。所以这些东西可以认为是Java EE或者Java 的核心API的东西（关于Spring 与Java EE的关系，可见<a target="_blank" rel="noopener" href="http://www.infoq.com/cn/news/2015/07/spring-javaee">开发者眼中的Spring与Java EE</a>），这是个需要注意的地方。</p>
+<p>第二点是我在看代码是想到的，比如说我一直不知道一些Spring MVC应用程序的入口在哪儿(特别是那些通过部署描述符web.xml配置的)，即何时进行DI的中的bean的管理的，知道看到今天这篇文档才完全搞搞清楚Spring中是如何完成Web应用程序上下文的初始化，也就是Ioc容器的初始化的(详情可见<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/523bfddf0810">ContextLoaderListener解析</a>)。简单来说，就是在服务器启动时，监听器的响应动作contextInitialized被调用，在这个方法中，进行创建了spring context，并将其较为application的内置对象，初始化了Ioc容器。</p>
+<h2 id="11-参考文档"><a href="#11-参考文档" class="headerlink" title="11. 参考文档"></a>11. 参考文档</h2><p><a target="_blank" rel="noopener" href="https://www.journaldev.com/1945/servletcontextlistener-servlet-listener-example">ServletContextListener Servlet Listener Example</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaEE/" rel="tag"># JavaEE</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/02/2018-10-02-Java-Servlet-Filter/" rel="prev" title="Java EE(3) - Java Servlet Filter">
+      <i class="fa fa-chevron-left"></i> Java EE(3) - Java Servlet Filter
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/09/2018-10-09-Java-Servlet-Cookies/" rel="next" title="Java EE(5) - Java Servlet Cookies">
+      Java EE(5) - Java Servlet Cookies <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81Servlet-Listener"><span class="nav-number">1.</span> <span class="nav-text">1. 为什么需要Servlet Listener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Servlet%E7%9B%91%E5%90%AC%E5%99%A8%E6%8E%A5%E5%8F%A3%E4%BB%A5%E5%8F%8A%E4%BA%8B%E4%BB%B6%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.</span> <span class="nav-text">2. Servlet监听器接口以及事件对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Servlet-Listener-%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">3. Servlet Listener 配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Servlet-Listener-Example"><span class="nav-number">4.</span> <span class="nav-text">4. Servlet Listener Example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-ServletContextListener"><span class="nav-number">5.</span> <span class="nav-text">5. ServletContextListener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-ServletContextAttributeListener"><span class="nav-number">6.</span> <span class="nav-text">6. ServletContextAttributeListener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-HttpSessionListener"><span class="nav-number">7.</span> <span class="nav-text">7. HttpSessionListener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-ServletRequestListener"><span class="nav-number">8.</span> <span class="nav-text">8. ServletRequestListener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E8%BF%90%E8%A1%8C%E7%A8%8B%E5%BA%8F"><span class="nav-number">9.</span> <span class="nav-text">9. 运行程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E6%80%9D%E8%80%83%E5%92%8C%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">10. 思考和总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">11.</span> <span class="nav-text">11. 参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robinson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robinson</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

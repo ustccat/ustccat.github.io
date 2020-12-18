@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Java Servlet Filter用于拦截请求并进行一些预处理（Pre-Processing），可用于拦截响应并在发送到Web应用程序中的客户端之前进行后处理（Post-Processing）。 1. 为什么需要Servlet Filter?在上一篇文章中，我们学习了如何在Web应用程序中管理会话，如果我们想确保只有在用户会话有效时才能访问资源，我们可以使用servlet会话属性来实现。方法很">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java EE(3) - Java Servlet Filter">
+<meta property="og:url" content="http://example.com/2018/10/02/2018-10-02-Java-Servlet-Filter/index.html">
+<meta property="og:site_name" content="Road To Excelsior">
+<meta property="og:description" content="Java Servlet Filter用于拦截请求并进行一些预处理（Pre-Processing），可用于拦截响应并在发送到Web应用程序中的客户端之前进行后处理（Post-Processing）。 1. 为什么需要Servlet Filter?在上一篇文章中，我们学习了如何在Web应用程序中管理会话，如果我们想确保只有在用户会话有效时才能访问资源，我们可以使用servlet会话属性来实现。方法很">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/assets/posts/Java-Servlet-Filter/Servlet-Filter-Example-Project.png">
+<meta property="og:image" content="http://example.com/assets/posts/Java-Servlet-Filter/Servlet-Filter-Login.png">
+<meta property="og:image" content="http://example.com/assets/posts/Java-Servlet-Filter/Servlet-Filter-Login-Success.png">
+<meta property="og:image" content="http://example.com/assets/posts/Java-Servlet-Filter/Servlet-Filter-Checkout.png">
+<meta property="article:published_time" content="2018-10-02T13:41:05.000Z">
+<meta property="article:modified_time" content="2020-12-17T16:40:26.724Z">
+<meta property="article:author" content="Robinson">
+<meta property="article:tag" content="JavaEE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/assets/posts/Java-Servlet-Filter/Servlet-Filter-Example-Project.png">
+
+<link rel="canonical" href="http://example.com/2018/10/02/2018-10-02-Java-Servlet-Filter/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Java EE(3) - Java Servlet Filter | Road To Excelsior</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Road To Excelsior</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/10/02/2018-10-02-Java-Servlet-Filter/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java EE(3) - Java Servlet Filter
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-10-02 21:41:05" itemprop="dateCreated datePublished" datetime="2018-10-02T21:41:05+08:00">2018-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-18 00:40:26" itemprop="dateModified" datetime="2020-12-18T00:40:26+08:00">2020-12-18</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Java Servlet Filter用于拦截请求并进行一些预处理（Pre-Processing），可用于拦截响应并在发送到Web应用程序中的客户端之前进行后处理（Post-Processing）。</p>
+<h2 id="1-为什么需要Servlet-Filter"><a href="#1-为什么需要Servlet-Filter" class="headerlink" title="1. 为什么需要Servlet Filter?"></a>1. 为什么需要Servlet Filter?</h2><p>在上一篇文章中，我们学习了如何在Web应用程序中管理会话，如果我们想确保只有在用户会话有效时才能访问资源，我们可以使用servlet会话属性来实现。方法很简单，但如果我们有很多servlet和jsps，那么由于冗余代码，它将变得难以维护。 如果我们希望将来更改属性名称，我们将不得不更改我们进行会话身份验证的所有位置。</p>
+<p>这就是为什么我们有servlet过滤器。 Servlet过滤器是可插入（Pluggable）的Java组件，我们可以在它们被发送到servlet之前拦截和处理请求，并在servlet代码完成之后，容器将响应发送回客户端之前进行响应。</p>
+<p>我们可以使用servlet过滤器执行的一些常见任务是：</p>
+<ul>
+<li>将请求参数记录到日志文件。</li>
+<li>资源请求的身份验证和自动化。</li>
+<li>在将请求主体或标头发送到servlet之前格式化。</li>
+<li>压缩发送给客户端的响应数据。</li>
+<li>通过添加一些cookie，标题信息等来改变响应。</li>
+</ul>
+<p>正如我之前提到的，servlet过滤器是可插入的，并在部署描述符（web.xml）文件中配置。 Servlet和过滤器都没有彼此意识到，我们可以通过编辑web.xml来添加或删除servlet过滤器。 我们可以为单个资源提供多个过滤器，我们可以在web.xml中为单个资源创建一系列过滤器。 我们可以通过实现javax.servlet.Filter接口来创建Servlet过滤器。</p>
+<h2 id="2-Servlet-Filter-Interface"><a href="#2-Servlet-Filter-Interface" class="headerlink" title="2. Servlet Filter Interface"></a>2. Servlet Filter Interface</h2><p>Servlet Filter接口类似于Servlet接口，我们需要实现它来创建我们自己的servlet过滤器。 Servlet Filter接口包含Filter的生命周期方法，它由servlet容器管理。</p>
+<p>Servlet过滤器界面生命周期方法是：</p>
+<ol>
+<li><em>void init(FilterConfig paramFilterConfig)</em> - 当容器初始化Filter时，这是被调用的方法。 此方法在过滤器的生命周期中只调用一次，我们应该初始化此方法中的任何资源。 容器使用FilterConfig向Filter提供init参数和servlet上下文对象。 我们可以在这个方法中抛出ServletException。</li>
+<li><em>doFilter(ServletRequest paramServletRequest, ServletResponse paramServletResponse, FilterChain paramFilterChain)</em> - 这是容器每次必须将过滤器应用于资源时调用的方法。 Container提供请求和响应对象引用给过滤器为参数。 FilterChain用于调用链中的下一个过滤器。 这里有<a target="_blank" rel="noopener" href="https://www.journaldev.com/1617/chain-of-responsibility-design-pattern-in-java">责任链模式</a>的一个很好的例子。</li>
+<li><em>void destroy()</em> - 当容器卸载Filter实例时，它会调用destroy（）方法。这是我们可以关闭过滤器打开的任何资源的方法。此方法在过滤器的生命周期中仅调用一次。</li>
+</ol>
+<h2 id="3-Servlet-WebFilter-annotation"><a href="#3-Servlet-WebFilter-annotation" class="headerlink" title="3. Servlet WebFilter annotation"></a>3. Servlet WebFilter annotation</h2><p>在Servlet 3.0中引入了javax.servlet.annotation.WebFilter，我们可以使用这个注释声明一个servlet过滤器。 我们可以使用此批注来定义init参数，过滤器名称和描述，servlet，url模式和调度程序类型以应用过滤器。 如果频繁更改过滤器配置，最好使用web.xml，因为这不需要您重新编译过滤器类。</p>
+<p>辅助材料：<a target="_blank" rel="noopener" href="https://www.journaldev.com/721/java-annotations">Java Annotation Tutorial</a></p>
+<h2 id="4-Servlet-Filter-configuration-in-web-xml"><a href="#4-Servlet-Filter-configuration-in-web-xml" class="headerlink" title="4. Servlet Filter configuration in web.xml"></a>4. Servlet Filter configuration in web.xml</h2><p>可以在web.xml中声明一个servlet 过滤器，如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span> <span class="comment">&lt;!-- mandatory --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>com.journaldev.servlet.filters.RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span> <span class="comment">&lt;!-- mandatory --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">init-param</span>&gt;</span> <span class="comment">&lt;!-- optional --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>test<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>testValue<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以将Filter映射到servlet类或url-patterns，如下所示:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span> <span class="comment">&lt;!-- mandatory --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span> <span class="comment">&lt;!-- either url-pattern or servlet-name is mandatory --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">servlet-name</span>&gt;</span>LoginServlet<span class="tag">&lt;/<span class="name">servlet-name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="name">dispatcher</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：在为servlet创建过滤器链时，容器首先处理url-patterns，然后处理servlet-names，因此如果必须确保以特定顺序执行过滤器，请在定义过滤器映射时给予额外注意。</p>
+<p>Servlet过滤器通常用于客户端请求，但有时我们也希望将过滤器应用于RequestDispatcher，在这种情况下我们可以使用dispatcher元素，可能的值是REQUEST，FORWARD，INCLUDE，ERROR和ASYNC。 如果没有定义dispatcher，则仅应用于客户端请求。</p>
+<h2 id="5-Servlet-Filter-example-for-logging-and-session-validation"><a href="#5-Servlet-Filter-example-for-logging-and-session-validation" class="headerlink" title="5. Servlet Filter example for logging and session validation"></a>5. Servlet Filter example for logging and session validation</h2><p>在下面这个例子中，我们将创建过滤器来记录请求cookie和参数，并验证除静态HTML和LoginServlet之外的所有资源的会话，因为它没有会话(Session)。</p>
+<p>我们将创建一个动态Web项目ServletFilterExample，其项目结构将如下图所示。<br><img src="/assets/posts/Java-Servlet-Filter/Servlet-Filter-Example-Project.png" alt="项目文件结构图"></p>
+<p>login.html是我们的应用程序的入口点，用户将提供用于身份验证的登录ID和密码。</p>
+<p>login.html的代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LoginServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">            Username: <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;user&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">            Password: <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;password&quot;</span> <span class="attr">name</span>=<span class="string">&quot;pwd&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Login&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>LoginServlet用于验证来自客户端的登录请求:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.PrintWriter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.RequestDispatcher;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LoginServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LoginServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LoginServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String userID = <span class="string">&quot;admin&quot;</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String password = <span class="string">&quot;password&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// get request parameters for userID and password</span></span><br><span class="line">		String user = request.getParameter(<span class="string">&quot;user&quot;</span>);</span><br><span class="line">		String pwd = request.getParameter(<span class="string">&quot;pwd&quot;</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span>(userID.equals(user) &amp;&amp; password.equals(pwd))&#123;</span><br><span class="line">			HttpSession session = request.getSession();</span><br><span class="line">			session.setAttribute(<span class="string">&quot;user&quot;</span>, <span class="string">&quot;Pankaj&quot;</span>);</span><br><span class="line">			<span class="comment">//setting session to expiry in 30 mins</span></span><br><span class="line">			session.setMaxInactiveInterval(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			Cookie userName = <span class="keyword">new</span> Cookie(<span class="string">&quot;user&quot;</span>, user);</span><br><span class="line">			userName.setMaxAge(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			response.addCookie(userName);</span><br><span class="line">			response.sendRedirect(<span class="string">&quot;LoginSuccess.jsp&quot;</span>);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			RequestDispatcher rd = getServletContext().getRequestDispatcher(<span class="string">&quot;/login.html&quot;</span>);</span><br><span class="line">			PrintWriter out= response.getWriter();</span><br><span class="line">			out.println(<span class="string">&quot;&lt;font color=red&gt;Either user name or password is wrong.&lt;/font&gt;&quot;</span>);</span><br><span class="line">			rd.include(request, response);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端通过身份验证后，会转发到LoginSuccess.jsp。<br>LoginSuccess.jsp代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">            //allow access only if session exists</span><br><span class="line">            String user = (String) session.getAttribute(&quot;user&quot;);</span><br><span class="line">            String userName = null;</span><br><span class="line">            String sessionID = null;</span><br><span class="line">            Cookie[] cookies = request.getCookies();</span><br><span class="line">            if(cookies !=null)&#123;</span><br><span class="line">                for(Cookie cookie : cookies)&#123;</span><br><span class="line">	                if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">	                if(cookie.getName().equals(&quot;JSESSIONID&quot;)) sessionID = cookie.getValue();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, Login successful. Your Session ID=&lt;%=sessionID %&gt;<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        User=&lt;%=user %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;CheckoutPage.jsp&quot;</span>&gt;</span>Checkout Page<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LogoutServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>请注意，上面的JSP中没有会话验证逻辑。它包含指向另一个JSP页面CheckoutPage.jsp的链接。<br>CheckoutPage.jsp代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">        String userName = null;</span><br><span class="line">        String sessionID = null;</span><br><span class="line">        Cookie[] cookies = request.getCookies();</span><br><span class="line">        if(cookies !=null)&#123;</span><br><span class="line">            for(Cookie cookie : cookies)&#123;</span><br><span class="line">	            if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, do the checkout.<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LogoutServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当客户端点击任何JSP页面中的Logout按钮时，将调用LogoutServlet:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LogoutServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LogoutServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogoutServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">       </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    	response.setContentType(<span class="string">&quot;text/html&quot;</span>);</span><br><span class="line">    	Cookie[] cookies = request.getCookies();</span><br><span class="line">    	<span class="keyword">if</span>(cookies != <span class="keyword">null</span>)&#123;</span><br><span class="line">    	<span class="keyword">for</span>(Cookie cookie : cookies)&#123;</span><br><span class="line">    		<span class="keyword">if</span>(cookie.getName().equals(<span class="string">&quot;JSESSIONID&quot;</span>))&#123;</span><br><span class="line">    			System.out.println(<span class="string">&quot;JSESSIONID=&quot;</span>+cookie.getValue());</span><br><span class="line">    			<span class="keyword">break</span>;</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="comment">//invalidate the session if exists</span></span><br><span class="line">    	HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">    	System.out.println(<span class="string">&quot;User=&quot;</span>+session.getAttribute(<span class="string">&quot;user&quot;</span>));</span><br><span class="line">    	<span class="keyword">if</span>(session != <span class="keyword">null</span>)&#123;</span><br><span class="line">    		session.invalidate();</span><br><span class="line">    	&#125;</span><br><span class="line">    	response.sendRedirect(<span class="string">&quot;login.html&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在我们将创建日志和身份验证过滤器类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.filters;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.util.Enumeration;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.Filter;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.FilterChain;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet Filter implementation class RequestLoggingFilter</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebFilter(&quot;/RequestLoggingFilter&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RequestLoggingFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> ServletContext context;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig fConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.context = fConfig.getServletContext();</span><br><span class="line">		<span class="keyword">this</span>.context.log(<span class="string">&quot;RequestLoggingFilter initialized&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">		HttpServletRequest req = (HttpServletRequest) request;</span><br><span class="line">		Enumeration&lt;String&gt; params = req.getParameterNames();</span><br><span class="line">		<span class="keyword">while</span>(params.hasMoreElements())&#123;</span><br><span class="line">			String name = params.nextElement();</span><br><span class="line">			String value = request.getParameter(name);</span><br><span class="line">			<span class="keyword">this</span>.context.log(req.getRemoteAddr() + <span class="string">&quot;::Request Params::&#123;&quot;</span>+name+<span class="string">&quot;=&quot;</span>+value+<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		Cookie[] cookies = req.getCookies();</span><br><span class="line">		<span class="keyword">if</span>(cookies != <span class="keyword">null</span>)&#123;</span><br><span class="line">			<span class="keyword">for</span>(Cookie cookie : cookies)&#123;</span><br><span class="line">				<span class="keyword">this</span>.context.log(req.getRemoteAddr() + <span class="string">&quot;::Cookie::&#123;&quot;</span>+cookie.getName()+<span class="string">&quot;,&quot;</span>+cookie.getValue()+<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// pass the request along the filter chain</span></span><br><span class="line">		chain.doFilter(request, response);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">//we can close resources here</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>身份验证的过滤器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.filters;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.Filter;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.FilterChain;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebFilter;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="meta">@WebFilter(&quot;/AuthenticationFilter&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AuthenticationFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> ServletContext context;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig fConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.context = fConfig.getServletContext();</span><br><span class="line">		<span class="keyword">this</span>.context.log(<span class="string">&quot;AuthenticationFilter initialized&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response, FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line"></span><br><span class="line">		HttpServletRequest req = (HttpServletRequest) request;</span><br><span class="line">		HttpServletResponse res = (HttpServletResponse) response;</span><br><span class="line">		</span><br><span class="line">		String uri = req.getRequestURI();</span><br><span class="line">		<span class="keyword">this</span>.context.log(<span class="string">&quot;Requested Resource::&quot;</span>+uri);</span><br><span class="line">		</span><br><span class="line">		HttpSession session = req.getSession(<span class="keyword">false</span>);</span><br><span class="line">		<span class="comment">//如果不存在session，并且uri不是以html结尾的；或者uri不是以loginServlet结尾的，我们就进行重定向</span></span><br><span class="line">		<span class="keyword">if</span>(session == <span class="keyword">null</span> &amp;&amp; !(uri.endsWith(<span class="string">&quot;html&quot;</span>) || uri.endsWith(<span class="string">&quot;LoginServlet&quot;</span>)))&#123;</span><br><span class="line">			<span class="keyword">this</span>.context.log(<span class="string">&quot;Unauthorized access request&quot;</span>);</span><br><span class="line">			res.sendRedirect(<span class="string">&quot;login.html&quot;</span>);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			<span class="comment">// pass the request along the filter chain</span></span><br><span class="line">			chain.doFilter(request, response);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">//close any resources here</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请注意，我们不验证任何HTML页面或LoginServlet。现在我们将在web.xml文件中配置这些过滤器映射：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee&quot;</span> <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd&quot;</span> <span class="attr">version</span>=<span class="string">&quot;3.0&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">display-name</span>&gt;</span>ServletFilterExample<span class="tag">&lt;/<span class="name">display-name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">welcome-file-list</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">welcome-file</span>&gt;</span>login.html<span class="tag">&lt;/<span class="name">welcome-file</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">welcome-file-list</span>&gt;</span></span><br><span class="line">  </span><br><span class="line">  <span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>com.journaldev.servlet.filters.RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>AuthenticationFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>com.journaldev.servlet.filters.AuthenticationFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line">  </span><br><span class="line">  <span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>RequestLoggingFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="name">dispatcher</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>AuthenticationFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当我们运行应用程序，会得到如下的结果：</p>
+<p><img src="/assets/posts/Java-Servlet-Filter/Servlet-Filter-Login.png" alt="login"><br><img src="/assets/posts/Java-Servlet-Filter/Servlet-Filter-Login-Success.png" alt="loginSucess"><br><img src="/assets/posts/Java-Servlet-Filter/Servlet-Filter-Checkout.png" alt="logout"></p>
+<p>如果您未登录并尝试访问任何JSP页面，则会转到登录页面。<br>在服务器日志文件中，您可以看到servlet过滤器和servlet编写的日志。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Aug 13, 2013 1:06:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,B7275762B8D23121152B1270D6EB240A&#125;</span><br><span class="line">Aug 13, 2013 1:06:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;</span><br><span class="line">Aug 13, 2013 1:06:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Unauthorized access request</span><br><span class="line">Aug 13, 2013 1:06:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,B7275762B8D23121152B1270D6EB240A&#125;</span><br><span class="line">Aug 13, 2013 1:06:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;login.html</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Request Params::&#123;pwd&#x3D;password&#125;</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Request Params::&#123;user&#x3D;admin&#125;</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,B7275762B8D23121152B1270D6EB240A&#125;</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;LoginServlet</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:06:43 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;LoginSuccess.jsp</span><br><span class="line">Aug 13, 2013 1:06:52 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:06:52 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:06:52 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;CheckoutPage.jsp</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;LogoutServlet</span><br><span class="line">JSESSIONID&#x3D;8BDF777933194EDCAC1D8F1B73633C56</span><br><span class="line">User&#x3D;Pankaj</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:07:00 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;login.html</span><br><span class="line">Aug 13, 2013 1:07:06 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;LoginSuccess.jsp</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Unauthorized access request</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;JSESSIONID,8BDF777933194EDCAC1D8F1B73633C56&#125;</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: 0:0:0:0:0:0:0:1%0::Cookie::&#123;user,admin&#125;</span><br><span class="line">Aug 13, 2013 1:07:07 AM org.apache.catalina.core.ApplicationContext log</span><br><span class="line">INFO: Requested Resource::&#x2F;ServletFilterExample&#x2F;login.html</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这就是Java中的Servlet过滤器，它是J2EE Web应用程序的一个重要特性，我们应该将它用于各种servlet执行的常见任务。在以后的文章中，我们将研究servlet监听器和cookie。</p>
+<h2 id="6-思考和总结"><a href="#6-思考和总结" class="headerlink" title="6. 思考和总结"></a>6. 思考和总结</h2><p>这个文档较为详细的示范和总结了如何使用过滤器，也让我对对过滤器的应用场景有一个较为形象的理解。一遍看下来，主要有以下几个问题：</p>
+<ol>
+<li>对Session的部分还不是很熟悉，需要在看看前一章的JSESSION的内容；</li>
+<li>这些是基于jsp的实例，考虑到现在前后端分离的架构，过滤器改如何应用呢？</li>
+<li>如何避免编写web.xml？比如说通过编程的方式来完成过滤器的设置。</li>
+<li>突然想到Filter和spring中的interceptor拦截器的区别：可见<a target="_blank" rel="noopener" href="http://einverne.github.io/post/2017/08/spring-interceptor-vs-filter.html">Spring Interceptor vs Filter 拦截器和过滤器区别</a>; 以及<a target="_blank" rel="noopener" href="https://www.baeldung.com/spring-boot-add-filter">How to Define a Spring Boot Filter?</a></li>
+</ol>
+<h2 id="7-参考文档"><a href="#7-参考文档" class="headerlink" title="7. 参考文档"></a>7. 参考文档</h2><p><a target="_blank" rel="noopener" href="https://www.journaldev.com/1933/java-servlet-filter-example-tutorial">Java Servlet Filter Example Tutorial</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaEE/" rel="tag"># JavaEE</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/02/2018-10-02-Session-Management-in-Java/" rel="prev" title="Java EE(2) - Session Management in Java">
+      <i class="fa fa-chevron-left"></i> Java EE(2) - Session Management in Java
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/08/2018-10-08-Servlet-Listener/" rel="next" title="Java EE(4) - Servlet Listener">
+      Java EE(4) - Servlet Listener <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81Servlet-Filter"><span class="nav-number">1.</span> <span class="nav-text">1. 为什么需要Servlet Filter?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Servlet-Filter-Interface"><span class="nav-number">2.</span> <span class="nav-text">2. Servlet Filter Interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Servlet-WebFilter-annotation"><span class="nav-number">3.</span> <span class="nav-text">3. Servlet WebFilter annotation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Servlet-Filter-configuration-in-web-xml"><span class="nav-number">4.</span> <span class="nav-text">4. Servlet Filter configuration in web.xml</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Servlet-Filter-example-for-logging-and-session-validation"><span class="nav-number">5.</span> <span class="nav-text">5. Servlet Filter example for logging and session validation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E6%80%9D%E8%80%83%E5%92%8C%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">6. 思考和总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">7.</span> <span class="nav-text">7. 参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robinson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robinson</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
