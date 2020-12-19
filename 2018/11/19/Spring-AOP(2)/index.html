@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Abstract承接一，在完成了对aop标签的bean的初始化之后，AbstractApplicationContext通过refresh()方法来中的finishBeanFactoryInitialization 来完成对beanFactory中的aop相关的RootBeanDefinition的实例化，其通过为不同的bean生成不同类型的代理（主要是JdkDynamicAopProxy或者Ob">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring AOP(2) - 实例化">
+<meta property="og:url" content="http://example.com/2018/11/19/Spring-AOP(2)/index.html">
+<meta property="og:site_name" content="Road To Excelsior">
+<meta property="og:description" content="Abstract承接一，在完成了对aop标签的bean的初始化之后，AbstractApplicationContext通过refresh()方法来中的finishBeanFactoryInitialization 来完成对beanFactory中的aop相关的RootBeanDefinition的实例化，其通过为不同的bean生成不同类型的代理（主要是JdkDynamicAopProxy或者Ob">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-11-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-17T16:44:41.505Z">
+<meta property="article:author" content="Robinson">
+<meta property="article:tag" content="Spring Java">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2018/11/19/Spring-AOP(2)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Spring AOP(2) - 实例化 | Road To Excelsior</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Road To Excelsior</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/19/Spring-AOP(2)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring AOP(2) - 实例化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-11-19 00:00:00" itemprop="dateCreated datePublished" datetime="2018-11-19T00:00:00+08:00">2018-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-18 00:44:41" itemprop="dateModified" datetime="2020-12-18T00:44:41+08:00">2020-12-18</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h1><p>承接一，在完成了对aop标签的bean的初始化之后，AbstractApplicationContext通过refresh()方法来中的finishBeanFactoryInitialization 来完成对beanFactory中的aop相关的RootBeanDefinition的实例化，其通过为不同的bean生成不同类型的代理（主要是JdkDynamicAopProxy或者ObjenesisCglibAopProxy代理)实现面向切面编程的目的。</p>
+<h2 id="1-代理对象实例化"><a href="#1-代理对象实例化" class="headerlink" title="1. 代理对象实例化"></a>1. 代理对象实例化</h2><p>下图显示了通过断点调试的方法打印出了aop 代理对象实例化的过程：</p>
+<p>![](/assets/posts/Spring aop instance/aop-instance.png)</p>
+<p>通过分析如下，其主要包含了如下几个步骤：</p>
+<ol>
+<li>判断是否需要为bean生成代理；</li>
+<li>创建AopProxy代理接口实现类；</li>
+<li>通过接口实现类的getProxy方法来获取<bean>对应的代理；</li>
+</ol>
+<h3 id="1-1-判断是否为bean生成代理"><a href="#1-1-判断是否为bean生成代理" class="headerlink" title="1.1 判断是否为bean生成代理"></a>1.1 判断是否为bean生成代理</h3><p>在AbstractAutoProxyCreator中，wrapIfNecessary方法显示了什么时候为bean生成代理包装的过程，其主要通过拿到bean对应的Advisor数组，只要Advisor数组不为空，那么就会通过第17行的代码为<bean>创建代理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Wrap the given bean if necessary, i.e. if it is eligible for being proxied.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> bean the raw bean instance</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> beanName the name of the bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> cacheKey the cache key for metadata access</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> a proxy wrapping the bean, or the raw bean instance as-is</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">wrapIfNecessary</span><span class="params">(Object bean, String beanName, Object cacheKey)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.targetSourcedBeans.contains(beanName)) &#123;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (Boolean.FALSE.equals(<span class="keyword">this</span>.advisedBeans.get(cacheKey))) &#123;</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) &#123;</span><br><span class="line">		<span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.FALSE);</span><br><span class="line">		<span class="keyword">return</span> bean;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Create proxy if we have advice.</span></span><br><span class="line">	Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, <span class="keyword">null</span>);</span><br><span class="line">	<span class="keyword">if</span> (specificInterceptors != DO_NOT_PROXY) &#123;</span><br><span class="line">		<span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.TRUE);</span><br><span class="line">		Object proxy = createProxy(</span><br><span class="line">				bean.getClass(), beanName, specificInterceptors, <span class="keyword">new</span> SingletonTargetSource(bean));</span><br><span class="line">		<span class="keyword">this</span>.proxyTypes.put(cacheKey, proxy.getClass());</span><br><span class="line">		<span class="keyword">return</span> proxy;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.FALSE);</span><br><span class="line">	<span class="keyword">return</span> bean;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里面的AbstractAutoProxyCreator是如何引用在实例化bean中的呢？？在前面的ioc博客中显示，AbstractAutowireCapableBeanFactory作为功能最强大的bean factory，其在实例化bean的过程(initializeBean)中，调用了applyBeanPostProcessorsAfterInitialization()方法，在bean初始化之后进行了后处理。在这个方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">applyBeanPostProcessorsAfterInitialization</span><span class="params">(Object existingBean, String beanName)</span></span></span><br><span class="line"><span class="function">		<span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">	Object result = existingBean;</span><br><span class="line">	<span class="keyword">for</span> (BeanPostProcessor beanProcessor : getBeanPostProcessors()) &#123;</span><br><span class="line">		Object current = beanProcessor.postProcessAfterInitialization(result, beanName);</span><br><span class="line">		<span class="keyword">if</span> (current == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> result;</span><br><span class="line">		&#125;</span><br><span class="line">		result = current;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其调用了父虚拟类的getBeanPostProcessors的方法获得了BeanPostProcessor来完成了对bean的处理，这里AbstractAutoProxyCreator是BeanPostProcessor的一个实现(虚)类。也就是说，在bean factory中已经存在对应的BeanPostProcessor实例来完成对符合条件的bean进行代理对象的创建的。</p>
+<p>其中关于AbstractAutoProxyCreator的类层次架构如下：<br>![](/assets/posts/Spring aop instance/AbstractAutoProxyCreator.png)</p>
+<h3 id="1-2-创建AopProxy代理接口实现类"><a href="#1-2-创建AopProxy代理接口实现类" class="headerlink" title="1.2 创建AopProxy代理接口实现类"></a>1.2 创建AopProxy代理接口实现类</h3><p>在AbstractAutoProxyCreator中,createProxy方法用来为给定的bean创建AOP代理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create an AOP proxy for the given bean.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> beanClass the class of the bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> beanName the name of the bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> specificInterceptors the set of interceptors that is</span></span><br><span class="line"><span class="comment"> * specific to this bean (may be empty, but not null)</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> targetSource the TargetSource for the proxy,</span></span><br><span class="line"><span class="comment"> * already pre-configured to access the bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the AOP proxy for the bean</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #buildAdvisors</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">createProxy</span><span class="params">(Class&lt;?&gt; beanClass, <span class="meta">@Nullable</span> String beanName,</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="meta">@Nullable</span> Object[] specificInterceptors, TargetSource targetSource)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.beanFactory <span class="keyword">instanceof</span> ConfigurableListableBeanFactory) &#123;</span><br><span class="line">		AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory) <span class="keyword">this</span>.beanFactory, beanName, beanClass);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ProxyFactory proxyFactory = <span class="keyword">new</span> ProxyFactory();</span><br><span class="line">	proxyFactory.copyFrom(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!proxyFactory.isProxyTargetClass()) &#123;</span><br><span class="line">		<span class="keyword">if</span> (shouldProxyTargetClass(beanClass, beanName)) &#123;</span><br><span class="line">			proxyFactory.setProxyTargetClass(<span class="keyword">true</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			evaluateProxyInterfaces(beanClass, proxyFactory);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);</span><br><span class="line">	proxyFactory.addAdvisors(advisors);</span><br><span class="line">	proxyFactory.setTargetSource(targetSource);</span><br><span class="line">	customizeProxyFactory(proxyFactory);</span><br><span class="line"></span><br><span class="line">	proxyFactory.setFrozen(<span class="keyword">this</span>.freezeProxy);</span><br><span class="line">	<span class="keyword">if</span> (advisorsPreFiltered()) &#123;</span><br><span class="line">		proxyFactory.setPreFiltered(<span class="keyword">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> proxyFactory.getProxy(getProxyClassLoader());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进入最后一行的工厂方法中，proxyFactory.getProxy()的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create a new proxy according to the settings in this factory.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;Can be called repeatedly. Effect will vary if we&#x27;ve added</span></span><br><span class="line"><span class="comment"> * or removed interfaces. Can add and remove interceptors.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;Uses the given class loader (if necessary for proxy creation).</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> classLoader the class loader to create the proxy with</span></span><br><span class="line"><span class="comment"> * (or &#123;<span class="doctag">@code</span> null&#125; for the low-level proxy facility&#x27;s default)</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the proxy object</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getProxy</span><span class="params">(<span class="meta">@Nullable</span> ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> createAopProxy().getProxy(classLoader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见，这个方法根据这个工厂的设定来创建一个新的代理。先看看，这个工厂类的继承层次：<br>![](/assets/posts/Spring aop instance/ProxyFactory.png)</p>
+<p>进入方法可见，其调用ProxyCreatorSupport的方法来获取指定的AopProxy代理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Subclasses should call this to get a new AOP proxy. They should &lt;b&gt;not&lt;/b&gt;</span></span><br><span class="line"><span class="comment"> * create an AOP proxy with &#123;<span class="doctag">@code</span> this&#125; as an argument.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">synchronized</span> AopProxy <span class="title">createAopProxy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!<span class="keyword">this</span>.active) &#123;</span><br><span class="line">		activate();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> getAopProxyFactory().createAopProxy(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>hold on。那么问题来了，哪里获取指定的proxy实例呢，答案在getAopProxyFactory方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">private</span> AopProxyFactory aopProxyFactory;</span><br><span class="line"> </span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Return the AopProxyFactory that this ProxyConfig uses.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> AopProxyFactory <span class="title">getAopProxyFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">this</span>.aopProxyFactory;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>即，其通过AopProxyFactory的工厂实现类完成了对不同类型的bean选择不同的proxy的过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultAopProxyFactory</span> <span class="keyword">implements</span> <span class="title">AopProxyFactory</span>, <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> AopProxy <span class="title">createAopProxy</span><span class="params">(AdvisedSupport config)</span> <span class="keyword">throws</span> AopConfigException </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) &#123;</span><br><span class="line">			Class&lt;?&gt; targetClass = config.getTargetClass();</span><br><span class="line">			<span class="keyword">if</span> (targetClass == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> AopConfigException(<span class="string">&quot;TargetSource cannot determine target class: &quot;</span> +</span><br><span class="line">						<span class="string">&quot;Either an interface or a target is required for proxy creation.&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">new</span> JdkDynamicAopProxy(config);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">new</span> ObjenesisCglibAopProxy(config);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">new</span> JdkDynamicAopProxy(config);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Determine whether the supplied &#123;<span class="doctag">@link</span> AdvisedSupport&#125; has only the</span></span><br><span class="line"><span class="comment">	 * &#123;<span class="doctag">@link</span> org.springframework.aop.SpringProxy&#125; interface specified</span></span><br><span class="line"><span class="comment">	 * (or no proxy interfaces specified at all).</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">hasNoUserSuppliedProxyInterfaces</span><span class="params">(AdvisedSupport config)</span> </span>&#123;</span><br><span class="line">		Class&lt;?&gt;[] ifcs = config.getProxiedInterfaces();</span><br><span class="line">		<span class="keyword">return</span> (ifcs.length == <span class="number">0</span> || (ifcs.length == <span class="number">1</span> &amp;&amp; SpringProxy.class.isAssignableFrom(ifcs[<span class="number">0</span>])));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>平时我们说AOP原理三句话就能概括：</p>
+<ol>
+<li>对类生成代理使用CGLIB</li>
+<li>对接口生成代理使用JDK原生的Proxy</li>
+<li>可以通过配置文件指定对接口使用CGLIB生成代理</li>
+</ol>
+<p>其中，关于CGLIB的介绍，可见参考文档一，关于JDK PROXY可见参考文档二。</p>
+<h3 id="1-3-通过getProxy方法来获取对应的代理"><a href="#1-3-通过getProxy方法来获取对应的代理" class="headerlink" title="1.3 通过getProxy方法来获取对应的代理"></a>1.3 通过getProxy方法来获取<bean>对应的代理</h3><p>关于AopProxy接口的定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.springframework.aop.framework;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.lang.Nullable;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Delegate interface for a configured AOP proxy, allowing for the creation</span></span><br><span class="line"><span class="comment"> * of actual proxy objects.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;Out-of-the-box implementations are available for JDK dynamic proxies</span></span><br><span class="line"><span class="comment"> * and for CGLIB proxies, as applied by &#123;<span class="doctag">@link</span> DefaultAopProxyFactory&#125;.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Rod Johnson</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Juergen Hoeller</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> DefaultAopProxyFactory</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AopProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new proxy object.</span></span><br><span class="line"><span class="comment">	 * &lt;p&gt;Uses the AopProxy&#x27;s default class loader (if necessary for proxy creation):</span></span><br><span class="line"><span class="comment">	 * usually, the thread context class loader.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the new proxy object (never &#123;<span class="doctag">@code</span> null&#125;)</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@see</span> Thread#getContextClassLoader()</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">Object <span class="title">getProxy</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new proxy object.</span></span><br><span class="line"><span class="comment">	 * &lt;p&gt;Uses the given class loader (if necessary for proxy creation).</span></span><br><span class="line"><span class="comment">	 * &#123;<span class="doctag">@code</span> null&#125; will simply be passed down and thus lead to the low-level</span></span><br><span class="line"><span class="comment">	 * proxy facility&#x27;s default, which is usually different from the default chosen</span></span><br><span class="line"><span class="comment">	 * by the AopProxy implementation&#x27;s &#123;<span class="doctag">@link</span> #getProxy()&#125; method.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> classLoader the class loader to create the proxy with</span></span><br><span class="line"><span class="comment">	 * (or &#123;<span class="doctag">@code</span> null&#125; for the low-level proxy facility&#x27;s default)</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> the new proxy object (never &#123;<span class="doctag">@code</span> null&#125;)</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">Object <span class="title">getProxy</span><span class="params">(<span class="meta">@Nullable</span> ClassLoader classLoader)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在我们的样例中，采用的是CglibAopProxy来获取代理，关于Cglib的相关介绍，可见参考文档一。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getProxy</span><span class="params">(<span class="meta">@Nullable</span> ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">		logger.debug(<span class="string">&quot;Creating CGLIB proxy: target source is &quot;</span> + <span class="keyword">this</span>.advised.getTargetSource());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		Class&lt;?&gt; rootClass = <span class="keyword">this</span>.advised.getTargetClass();</span><br><span class="line">		Assert.state(rootClass != <span class="keyword">null</span>, <span class="string">&quot;Target class must be available for creating a CGLIB proxy&quot;</span>);</span><br><span class="line"></span><br><span class="line">		Class&lt;?&gt; proxySuperClass = rootClass;</span><br><span class="line">		<span class="keyword">if</span> (ClassUtils.isCglibProxyClass(rootClass)) &#123;</span><br><span class="line">			proxySuperClass = rootClass.getSuperclass();</span><br><span class="line">			Class&lt;?&gt;[] additionalInterfaces = rootClass.getInterfaces();</span><br><span class="line">			<span class="keyword">for</span> (Class&lt;?&gt; additionalInterface : additionalInterfaces) &#123;</span><br><span class="line">				<span class="keyword">this</span>.advised.addInterface(additionalInterface);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Validate the class, writing log messages as necessary.</span></span><br><span class="line">		validateClassIfNecessary(proxySuperClass, classLoader);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Configure CGLIB Enhancer...</span></span><br><span class="line">		Enhancer enhancer = createEnhancer();</span><br><span class="line">		<span class="keyword">if</span> (classLoader != <span class="keyword">null</span>) &#123;</span><br><span class="line">			enhancer.setClassLoader(classLoader);</span><br><span class="line">			<span class="keyword">if</span> (classLoader <span class="keyword">instanceof</span> SmartClassLoader &amp;&amp;</span><br><span class="line">					((SmartClassLoader) classLoader).isClassReloadable(proxySuperClass)) &#123;</span><br><span class="line">				enhancer.setUseCache(<span class="keyword">false</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		enhancer.setSuperclass(proxySuperClass);</span><br><span class="line">		enhancer.setInterfaces(AopProxyUtils.completeProxiedInterfaces(<span class="keyword">this</span>.advised));</span><br><span class="line">		enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);</span><br><span class="line">		enhancer.setStrategy(<span class="keyword">new</span> ClassLoaderAwareUndeclaredThrowableStrategy(classLoader));</span><br><span class="line"></span><br><span class="line">		Callback[] callbacks = getCallbacks(rootClass);</span><br><span class="line">		Class&lt;?&gt;[] types = <span class="keyword">new</span> Class&lt;?&gt;[callbacks.length];</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> x = <span class="number">0</span>; x &lt; types.length; x++) &#123;</span><br><span class="line">			types[x] = callbacks[x].getClass();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// fixedInterceptorMap only populated at this point, after getCallbacks call above</span></span><br><span class="line">		enhancer.setCallbackFilter(<span class="keyword">new</span> ProxyCallbackFilter(</span><br><span class="line">				<span class="keyword">this</span>.advised.getConfigurationOnlyCopy(), <span class="keyword">this</span>.fixedInterceptorMap, <span class="keyword">this</span>.fixedInterceptorOffset));</span><br><span class="line">		enhancer.setCallbackTypes(types);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Generate the proxy class and create a proxy instance.</span></span><br><span class="line">		<span class="keyword">return</span> createProxyClassAndInstance(enhancer, callbacks);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (CodeGenerationException | IllegalArgumentException ex) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> AopConfigException(<span class="string">&quot;Could not generate CGLIB subclass of &quot;</span> + <span class="keyword">this</span>.advised.getTargetClass() +</span><br><span class="line">				<span class="string">&quot;: Common causes of this problem include using a final class or a non-visible class&quot;</span>,</span><br><span class="line">				ex);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">		<span class="comment">// TargetSource.getTarget() failed</span></span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> AopConfigException(<span class="string">&quot;Unexpected AOP exception&quot;</span>, ex);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码时CglibAopProxy的getProxy()方法，在这里面，通过设置合适的enhancer，以及callbacks，然后调用create方法来创建代理对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">createProxyClassAndInstance</span><span class="params">(Enhancer enhancer, Callback[] callbacks)</span> </span>&#123;</span><br><span class="line">	enhancer.setInterceptDuringConstruction(<span class="keyword">false</span>);</span><br><span class="line">	enhancer.setCallbacks(callbacks);</span><br><span class="line">	<span class="keyword">return</span> (<span class="keyword">this</span>.constructorArgs != <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.constructorArgTypes != <span class="keyword">null</span> ?</span><br><span class="line">			enhancer.create(<span class="keyword">this</span>.constructorArgTypes, <span class="keyword">this</span>.constructorArgs) :</span><br><span class="line">			enhancer.create());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结和思考"><a href="#总结和思考" class="headerlink" title="总结和思考"></a>总结和思考</h2><p>通过阅读spring aop的代码，可以发现，spring aop实现，主要是通过将 &lt;aop: advisor&gt; 标签来解析成 RootBeanDefinition 来完成对aop 代理对象的定义，然后在通过两种不同的代理生成方法，cglib以及jdk proxy的方法来完成对代理对象的生成。</p>
+<p>那么，RootBeanDefinition的定义是如何的呢？他是如何表示不同的切点，通知等这些aop的概念的呢？这个问题值得深入探讨一下。</p>
+<p>另外，cglib 以及 jdk proxy 是如何对RootBeanDefinition就行解析来完成代理对象的构建的呢？</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://ustccat.github.io/2018/10/18/CGLib.html">cglib</a></li>
+<li><a target="_blank" rel="noopener" href="https://ustccat.github.io/2018/10/27/Java-Proxy.html">JDK Dynamic Proxy</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.importnew.com/24459.html">Spring源码分析：AOP源码解析（下篇）</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring-Java/" rel="tag"># Spring Java</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/27/Java-Proxy/" rel="prev" title="JDK Dynamic Proxy">
+      <i class="fa fa-chevron-left"></i> JDK Dynamic Proxy
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/11/20/books%20and%20tasks/" rel="next" title="books and tasks in 2018">
+      books and tasks in 2018 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Abstract"><span class="nav-number">1.</span> <span class="nav-text">Abstract</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BB%A3%E7%90%86%E5%AF%B9%E8%B1%A1%E5%AE%9E%E4%BE%8B%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">1. 代理对象实例化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E5%88%A4%E6%96%AD%E6%98%AF%E5%90%A6%E4%B8%BAbean%E7%94%9F%E6%88%90%E4%BB%A3%E7%90%86"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1 判断是否为bean生成代理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E5%88%9B%E5%BB%BAAopProxy%E4%BB%A3%E7%90%86%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0%E7%B1%BB"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.2 创建AopProxy代理接口实现类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E9%80%9A%E8%BF%87getProxy%E6%96%B9%E6%B3%95%E6%9D%A5%E8%8E%B7%E5%8F%96%E5%AF%B9%E5%BA%94%E7%9A%84%E4%BB%A3%E7%90%86"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.3 通过getProxy方法来获取对应的代理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E5%92%8C%E6%80%9D%E8%80%83"><span class="nav-number">1.2.</span> <span class="nav-text">总结和思考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">1.3.</span> <span class="nav-text">参考文档</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robinson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robinson</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

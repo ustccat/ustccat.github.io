@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文旨在解释使用不同技术和示例程序的servlet中的会话管理。 1. 什么是SessionHTTP协议和Web服务器是无状态的，这意味着对于Web服务器而言，每个请求都是一个新的处理请求，并且无法识别它是否来自之前已发送请求的客户端。 但有时在Web应用程序中，我们应该知道客户端是谁并相应地处理请求。 例如，购物车应用程序应该知道谁正在发送物品的请求以及在哪个购物车中添加物品或者谁正在发送结账请">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java EE(2) - Session Management in Java">
+<meta property="og:url" content="http://example.com/2018/10/02/Session-Management-in-Java/index.html">
+<meta property="og:site_name" content="Road To Excelsior">
+<meta property="og:description" content="本文旨在解释使用不同技术和示例程序的servlet中的会话管理。 1. 什么是SessionHTTP协议和Web服务器是无状态的，这意味着对于Web服务器而言，每个请求都是一个新的处理请求，并且无法识别它是否来自之前已发送请求的客户端。 但有时在Web应用程序中，我们应该知道客户端是谁并相应地处理请求。 例如，购物车应用程序应该知道谁正在发送物品的请求以及在哪个购物车中添加物品或者谁正在发送结账请">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-Cookie-Example-Project.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/ServletCookie-login.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/ServletCookie-login-success-450x182.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-HttpSession-Example-Project.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/HttpSession-Login-Page.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/HttpSession-LoginSuccess-Page-450x133.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/HttpSession-Checkout-Page.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-Session-URL-Rewriting-Project.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-Login-Page.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-LoginSuccess-Page-450x113.png">
+<meta property="og:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-Checkout-Page-450x106.png">
+<meta property="article:published_time" content="2018-10-02T06:16:04.000Z">
+<meta property="article:modified_time" content="2020-12-17T16:41:38.031Z">
+<meta property="article:author" content="Robinson">
+<meta property="article:tag" content="JavaEE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/assets/posts/Session-Management-in-Java/Servlet-Cookie-Example-Project.png">
+
+<link rel="canonical" href="http://example.com/2018/10/02/Session-Management-in-Java/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Java EE(2) - Session Management in Java | Road To Excelsior</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Road To Excelsior</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/10/02/Session-Management-in-Java/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java EE(2) - Session Management in Java
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-10-02 14:16:04" itemprop="dateCreated datePublished" datetime="2018-10-02T14:16:04+08:00">2018-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-18 00:41:38" itemprop="dateModified" datetime="2020-12-18T00:41:38+08:00">2020-12-18</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文旨在解释使用不同技术和示例程序的servlet中的会话管理。</p>
+<h2 id="1-什么是Session"><a href="#1-什么是Session" class="headerlink" title="1. 什么是Session"></a>1. 什么是Session</h2><p>HTTP协议和Web服务器是无状态的，这意味着对于Web服务器而言，每个请求都是一个新的处理请求，并且无法识别它是否来自之前已发送请求的客户端。 但有时在Web应用程序中，我们应该知道客户端是谁并相应地处理请求。 例如，购物车应用程序应该知道谁正在发送物品的请求以及在哪个购物车中添加物品或者谁正在发送结账请求，以便它可以向正确的客户收取金额。</p>
+<p><strong>Session</strong>是客户端和服务器之间的转换状态，它可以包含客户端和服务器之间的多个请求和响应。 由于HTTP和Web Server都是无状态的，因此维护会话的唯一方法是在每个请求和响应中在服务器和客户端之间传递关于会话（会话ID）的一些唯一信息。</p>
+<p>我们可以通过多种方式在请求和响应中提供唯一标识符:</p>
+<ol>
+<li><p><strong>User Authentication</strong> - 这是一种非常常见的方式，通过我们用户从登录页面提供身份验证凭据，然后我们可以在服务器和客户端之间传递身份验证信息以维护会话。 这不是一种非常有效的方法，因为如果同一用户从不同的浏览器登录，它将无法工作。</p>
+</li>
+<li><p><strong>HTML Hidden Field</strong> - 我们可以在HTML中创建一个唯一的隐藏字段，当用户开始导航时，我们可以将其值设置为对用户唯一并跟踪会话。 此方法不能与链接一起使用，因为每次从具有隐藏字段的客户端到服务器发出请求时，它都需要提交表单。 它也不安全，因为我们可以从HTML源获取隐藏的字段值并使用它来破解会话。</p>
+</li>
+<li><p><strong>URL Rewriting</strong> - 我们可以为每个请求和响应附加会话标识符参数，以跟踪会话。这非常繁琐，因为我们需要在每个响应中跟踪此参数，并确保它不与其他参数冲突。</p>
+</li>
+<li><p><strong>Cookies</strong> - Cookie是Web服务器在响应标头中发送并存储在浏览器Cookie中的一小段信息。 当客户端进一步请求时，它会将cookie添加到请求标头中，我们可以利用它来跟踪会话。 我们可以使用cookie维护会话，但如果客户端禁用cookie，则它将无效。</p>
+</li>
+</ol>
+<p>5.<strong>Session Management API</strong> - 会话管理API建立在上述会话跟踪方法之上。 上述所有方法的一些主要缺点是：</p>
+<ul>
+<li><p>大多数情况下，我们不希望仅跟踪会话，我们必须将一些数据存储到我们可以在将来的请求中使用的会话中。如果我们尝试实现这一点，这将需要很多努力。</p>
+</li>
+<li><p>上述所有方法本身并不完整，所有这些方法都不适用于特定场景。因此，我们需要一种能够利用这些会话跟踪方法在所有情况下提供会话管理的解决方案；</p>
+</li>
+</ul>
+<p>这就是我们需要会话管理API和J2EE Servlet技术的原因，我们可以使用会话管理API。</p>
+<h2 id="2-Java中的会话管理-Cookies"><a href="#2-Java中的会话管理-Cookies" class="headerlink" title="2. Java中的会话管理 -Cookies"></a>2. Java中的会话管理 -Cookies</h2><p>Cookie会在Web应用程序中大量使用，以根据你的选择个性化响应或跟踪会话。 在继续使用Servlet会话管理API之前，我想展示如何通过一个小型Web应用程序跟踪cookie的会话。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/Servlet-Cookie-Example-Project.png" alt="文件结构"></p>
+<p>Web应用程序的部署描述符web.xml是：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">web-app</span> <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee&quot;</span> <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd&quot;</span> <span class="attr">id</span>=<span class="string">&quot;WebApp_ID&quot;</span> <span class="attr">version</span>=<span class="string">&quot;3.0&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">display-name</span>&gt;</span>ServletCookieExample<span class="tag">&lt;/<span class="name">display-name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">welcome-file-list</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">welcome-file</span>&gt;</span>login.html<span class="tag">&lt;/<span class="name">welcome-file</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">welcome-file-list</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">web-app</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们的应用程序的欢迎页面是login.html，我们将从用户获取身份验证详细信息。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LoginServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            Username: <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;user&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">            Password: <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;password&quot;</span> <span class="attr">name</span>=<span class="string">&quot;pwd&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Login&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这是LoginServlet负责登录请求。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.PrintWriter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.RequestDispatcher;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LoginServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LoginServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LoginServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String userID = <span class="string">&quot;Pankaj&quot;</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String password = <span class="string">&quot;journaldev&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// get request parameters for userID and password</span></span><br><span class="line">		String user = request.getParameter(<span class="string">&quot;user&quot;</span>);</span><br><span class="line">		String pwd = request.getParameter(<span class="string">&quot;pwd&quot;</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span>(userID.equals(user) &amp;&amp; password.equals(pwd))&#123;</span><br><span class="line">			Cookie loginCookie = <span class="keyword">new</span> Cookie(<span class="string">&quot;user&quot;</span>,user);</span><br><span class="line">			<span class="comment">//setting cookie to expiry in 30 mins</span></span><br><span class="line">			loginCookie.setMaxAge(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			response.addCookie(loginCookie);</span><br><span class="line">			response.sendRedirect(<span class="string">&quot;LoginSuccess.jsp&quot;</span>);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			RequestDispatcher rd = getServletContext().getRequestDispatcher(<span class="string">&quot;/login.html&quot;</span>);</span><br><span class="line">			PrintWriter out= response.getWriter();</span><br><span class="line">			out.println(<span class="string">&quot;&lt;font color=red&gt;Either user name or password is wrong.&lt;/font&gt;&quot;</span>);</span><br><span class="line">			rd.include(request, response);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意我们为响应设置的cookie，然后将其转发到LoginSuccess.jsp，此cookie将用于跟踪会话。 另请注意，cookie超时设置为30分钟。 理想情况下，应该有一个复杂的逻辑来设置会话跟踪的cookie值，以便它不会与任何其他请求冲突。</p>
+<p>以下是LoginSuccess.jsp的代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">        String userName = null;</span><br><span class="line">        Cookie[] cookies = request.getCookies();</span><br><span class="line">        if(cookies !=null)&#123;</span><br><span class="line">            for(Cookie cookie : cookies)&#123;</span><br><span class="line">                if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        if(userName == null) response.sendRedirect(&quot;login.html&quot;);</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, Login successful.<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LogoutServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>请注意，如果我们尝试直接访问JSP，它会将我们转发到登录页面。当我们点击Logout按钮时，我们应确保从客户端浏览器中删除cookie。</p>
+<p>以下是LogoutServlet.jsp的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LogoutServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LogoutServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogoutServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">       </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    	response.setContentType(<span class="string">&quot;text/html&quot;</span>);</span><br><span class="line">    	Cookie loginCookie = <span class="keyword">null</span>;</span><br><span class="line">    	Cookie[] cookies = request.getCookies();</span><br><span class="line">    	<span class="keyword">if</span>(cookies != <span class="keyword">null</span>)&#123;</span><br><span class="line">    	<span class="keyword">for</span>(Cookie cookie : cookies)&#123;</span><br><span class="line">    		<span class="keyword">if</span>(cookie.getName().equals(<span class="string">&quot;user&quot;</span>))&#123;</span><br><span class="line">    			loginCookie = cookie;</span><br><span class="line">    			<span class="keyword">break</span>;</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="keyword">if</span>(loginCookie != <span class="keyword">null</span>)&#123;</span><br><span class="line">    		loginCookie.setMaxAge(<span class="number">0</span>);</span><br><span class="line">        	response.addCookie(loginCookie);</span><br><span class="line">    	&#125;</span><br><span class="line">    	response.sendRedirect(<span class="string">&quot;login.html&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没有删除cookie的方法，但我们可以将最大年龄设置为0，以便立即从客户端浏览器中删除它。<br>下图显示了我们的Web应用程序的执行情况。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/ServletCookie-login.png" alt="cookie登录"><br><img src="/assets/posts/Session-Management-in-Java/ServletCookie-login-success-450x182.png" alt="登录成功"></p>
+<h2 id="3-Session-in-Java-HttpSession"><a href="#3-Session-in-Java-HttpSession" class="headerlink" title="3. Session in Java -HttpSession"></a>3. Session in Java -HttpSession</h2><p>Servlet API通过HttpSession接口提供会话管理。我们可以使用以下方法从HttpServletRequest对象获取会话。 HttpSession允许我们将对象设置为可在将来的请求中检索的属性。</p>
+<ol>
+<li><em>HttpSession getSession()</em> - 此方法始终返回HttpSession对象。它返回随请求附加的会话对象，如果请求没有附加会话，则它创建一个新会话并返回它。</li>
+<li><em>HttpSession getSession(boolean flag)</em> - 如果请求具有会话，则此方法返回HttpSession对象，否则返回null。</li>
+</ol>
+<p>HttpSession的一些重要方法是：</p>
+<ol>
+<li><em>String getId()</em> - 返回包含分配给此会话的唯一标识符的字符串。</li>
+<li><em>Object getAttribute(String name)</em> - 返回在此会话中使用指定名称绑定的对象，如果名称下没有绑定任何对象，则返回null。 使用Session属性的其他一些方法是getAttributeNames（），removeAttribute（String name）和setAttribute（String name，Object value）。</li>
+<li><em>long getCreationTime()</em> - 返回创建此会话的时间，以格林威治标准时间1970年1月1日午夜以来的毫秒数为单位。我们可以使用getLastAccessedTime（）方法获取上次访问的时间。</li>
+<li><em>setMaxInactiveInterval(int interval)</em> - 指定servlet容器使此会话失效之前的客户端请求之间的时间（以秒为单位）。我们可以从getMaxInactiveInterval（）方法获取会话超时值。</li>
+<li><em>ServletContext getServletContext()</em> - 返回应用程序的ServletContext对象。</li>
+<li><em>boolean isNew()</em> - 如果客户端尚未了解会话或客户端选择不加入会话，则返回true。</li>
+<li><em>void invalidate()</em> - 使此会话无效，然后取消绑定绑定到它的任何对象。</li>
+</ol>
+<h3 id="3-1-理解-JSESSIONID-Cookie"><a href="#3-1-理解-JSESSIONID-Cookie" class="headerlink" title="3.1. 理解 JSESSIONID Cookie"></a>3.1. 理解 JSESSIONID Cookie</h3><p>当我们使用HttpServletRequest getSession（）方法并创建一个新请求时，它会创建新的HttpSession对象，并将Cookie添加到响应对象，名称为JSESSIONID，值为会话ID。 此cookie用于在来自客户端的进一步请求中标识HttpSession对象。 如果在客户端禁用了cookie并且我们正在使用URL重写，则此方法使用请求URL中的jsessionid值来查找相应的会话。 JSESSIONID cookie用于会话跟踪，因此我们不应将其用于我们的应用程序目的，以避免任何与会话相关的问题。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/Servlet-HttpSession-Example-Project.png"></p>
+<p>login.html与之前的示例相同，并在web.xml中定义为应用程序的欢迎页面。<br>LoginServlet servlet将创建会话并设置我们可以在其他资源或将来的请求中使用的属性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.PrintWriter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.RequestDispatcher;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LoginServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LoginServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LoginServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String userID = <span class="string">&quot;admin&quot;</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String password = <span class="string">&quot;password&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// get request parameters for userID and password</span></span><br><span class="line">		String user = request.getParameter(<span class="string">&quot;user&quot;</span>);</span><br><span class="line">		String pwd = request.getParameter(<span class="string">&quot;pwd&quot;</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span>(userID.equals(user) &amp;&amp; password.equals(pwd))&#123;</span><br><span class="line">			HttpSession session = request.getSession();</span><br><span class="line">			session.setAttribute(<span class="string">&quot;user&quot;</span>, <span class="string">&quot;Pankaj&quot;</span>);</span><br><span class="line">			<span class="comment">//setting session to expiry in 30 mins</span></span><br><span class="line">			session.setMaxInactiveInterval(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			Cookie userName = <span class="keyword">new</span> Cookie(<span class="string">&quot;user&quot;</span>, user);</span><br><span class="line">			userName.setMaxAge(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			response.addCookie(userName);</span><br><span class="line">			response.sendRedirect(<span class="string">&quot;LoginSuccess.jsp&quot;</span>);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			RequestDispatcher rd = getServletContext().getRequestDispatcher(<span class="string">&quot;/login.html&quot;</span>);</span><br><span class="line">			PrintWriter out= response.getWriter();</span><br><span class="line">			out.println(<span class="string">&quot;&lt;font color=red&gt;Either user name or password is wrong.&lt;/font&gt;&quot;</span>);</span><br><span class="line">			rd.include(request, response);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Our LoginSuccess.jsp code is given below.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">        //allow access only if session exists</span><br><span class="line">        String user = null;</span><br><span class="line">        if(session.getAttribute(&quot;user&quot;) == null)&#123;</span><br><span class="line">            response.sendRedirect(&quot;login.html&quot;);</span><br><span class="line">        &#125;else user = (String) session.getAttribute(&quot;user&quot;);</span><br><span class="line">        String userName = null;</span><br><span class="line">        String sessionID = null;</span><br><span class="line">        Cookie[] cookies = request.getCookies();</span><br><span class="line">        if(cookies !=null)&#123;</span><br><span class="line">            for(Cookie cookie : cookies)&#123;</span><br><span class="line">                if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">                if(cookie.getName().equals(&quot;JSESSIONID&quot;)) sessionID = cookie.getValue();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, Login successful. Your Session ID=&lt;%=sessionID %&gt;<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        User=&lt;%=user %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;CheckoutPage.jsp&quot;</span>&gt;</span>Checkout Page<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LogoutServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当使用JSP资源时，容器会自动为其创建会话，因此我们无法检查会话是否为null以确保用户是否已通过登录页面，因此我们使用会话属性来验证请求。</p>
+<p>CheckoutPage.jsp是另一个页面，它的代码如下:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">        //allow access only if session exists</span><br><span class="line">        if(session.getAttribute(&quot;user&quot;) == null)&#123;</span><br><span class="line">            response.sendRedirect(&quot;login.html&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        String userName = null;</span><br><span class="line">        String sessionID = null;</span><br><span class="line">        Cookie[] cookies = request.getCookies();</span><br><span class="line">        if(cookies !=null)&#123;</span><br><span class="line">            for(Cookie cookie : cookies)&#123;</span><br><span class="line">                if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, do the checkout.<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;LogoutServlet&quot;</span> <span class="attr">method</span>=<span class="string">&quot;post&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们的LogoutServlet代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LogoutServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LogoutServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogoutServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">       </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    	response.setContentType(<span class="string">&quot;text/html&quot;</span>);</span><br><span class="line">    	Cookie[] cookies = request.getCookies();</span><br><span class="line">    	<span class="keyword">if</span>(cookies != <span class="keyword">null</span>)&#123;</span><br><span class="line">    	<span class="keyword">for</span>(Cookie cookie : cookies)&#123;</span><br><span class="line">    		<span class="keyword">if</span>(cookie.getName().equals(<span class="string">&quot;JSESSIONID&quot;</span>))&#123;</span><br><span class="line">    			System.out.println(<span class="string">&quot;JSESSIONID=&quot;</span>+cookie.getValue());</span><br><span class="line">    			<span class="keyword">break</span>;</span><br><span class="line">    		&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="comment">//invalidate the session if exists</span></span><br><span class="line">    	HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">    	System.out.println(<span class="string">&quot;User=&quot;</span>+session.getAttribute(<span class="string">&quot;user&quot;</span>));</span><br><span class="line">    	<span class="keyword">if</span>(session != <span class="keyword">null</span>)&#123;</span><br><span class="line">    		session.invalidate();</span><br><span class="line">    	&#125;</span><br><span class="line">    	response.sendRedirect(<span class="string">&quot;login.html&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请注意，我在日志中打印JSESSIONID cookie值，您可以检查服务器日志，它将在LoginSuccess.jsp中打印与Session Id相同的值。<br>下图显示了我们的Web应用程序的执行情况。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/HttpSession-Login-Page.png"><br><img src="/assets/posts/Session-Management-in-Java/HttpSession-LoginSuccess-Page-450x133.png"><br><img src="/assets/posts/Session-Management-in-Java/HttpSession-Checkout-Page.png"></p>
+<h2 id="4-Session-Management-in-Java-Servlet-–-URL-Rewriting"><a href="#4-Session-Management-in-Java-Servlet-–-URL-Rewriting" class="headerlink" title="4. Session Management in Java Servlet – URL Rewriting"></a>4. Session Management in Java Servlet – URL Rewriting</h2><p>正如我们在上一节中看到的那样，我们可以使用HttpSession管理会话但是如果我们在浏览器中禁用cookie，它将无法工作，因为服务器不会从客户端接收JSESSIONID cookie。</p>
+<p>Servlet API为URL重写提供支持，在这种情况下我们可以使用它来管理会话。 最好的部分是从编码的角度来看，它非常容易使用并涉及一步 - 编码URL。 Servlet URL编码的另一个好处是它是一种后备方法，只有在禁用浏览器cookie时它才能启动。</p>
+<p>我们可以使用HttpServletResponse encodeURL（）方法对URL进行编码，如果我们必须将请求重定向到另一个资源并且我们想要提供会话信息，我们可以使用encodeRedirectURL（）方法。</p>
+<p>我们将创建一个类似于上面的项目，除了我们将使用URL重写方法确保会话管理工作正常，即使在浏览器中禁用了cookie。 eclipse中的ServletSessionURLRewriting项目结构如下图所示。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/Servlet-Session-URL-Rewriting-Project.png"></p>
+<p>LoginServlet.java如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.PrintWriter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.RequestDispatcher;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LoginServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LoginServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LoginServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String userID = <span class="string">&quot;admin&quot;</span>;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String password = <span class="string">&quot;password&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// get request parameters for userID and password</span></span><br><span class="line">		String user = request.getParameter(<span class="string">&quot;user&quot;</span>);</span><br><span class="line">		String pwd = request.getParameter(<span class="string">&quot;pwd&quot;</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span>(userID.equals(user) &amp;&amp; password.equals(pwd))&#123;</span><br><span class="line">			HttpSession session = request.getSession();</span><br><span class="line">			session.setAttribute(<span class="string">&quot;user&quot;</span>, <span class="string">&quot;Pankaj&quot;</span>);</span><br><span class="line">			<span class="comment">//setting session to expiry in 30 mins</span></span><br><span class="line">			session.setMaxInactiveInterval(<span class="number">30</span>*<span class="number">60</span>);</span><br><span class="line">			Cookie userName = <span class="keyword">new</span> Cookie(<span class="string">&quot;user&quot;</span>, user);</span><br><span class="line">			response.addCookie(userName);</span><br><span class="line">			<span class="comment">//Get the encoded URL string</span></span><br><span class="line">			String encodedURL = response.encodeRedirectURL(<span class="string">&quot;LoginSuccess.jsp&quot;</span>);</span><br><span class="line">			response.sendRedirect(encodedURL);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			RequestDispatcher rd = getServletContext().getRequestDispatcher(<span class="string">&quot;/login.html&quot;</span>);</span><br><span class="line">			PrintWriter out= response.getWriter();</span><br><span class="line">			out.println(<span class="string">&quot;&lt;font color=red&gt;Either user name or password is wrong.&lt;/font&gt;&quot;</span>);</span><br><span class="line">			rd.include(request, response);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LoginSuccess.jsp的代码如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">&lt;%@ page language=&quot;java&quot; contentType=&quot;text/html; charset=US-ASCII&quot;</span><br><span class="line">    pageEncoding=&quot;US-ASCII&quot;%&gt;</span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;</span> <span class="meta-string">&quot;http://www.w3.org/TR/html4/loose.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">&quot;Content-Type&quot;</span> <span class="attr">content</span>=<span class="string">&quot;text/html; charset=US-ASCII&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Login Success Page<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        &lt;%</span><br><span class="line">        //allow access only if session exists</span><br><span class="line">        String user = null;</span><br><span class="line">        if(session.getAttribute(&quot;user&quot;) == null)&#123;</span><br><span class="line">            response.sendRedirect(&quot;login.html&quot;);</span><br><span class="line">        &#125;else user = (String) session.getAttribute(&quot;user&quot;);</span><br><span class="line">        String userName = null;</span><br><span class="line">        String sessionID = null;</span><br><span class="line">        Cookie[] cookies = request.getCookies();</span><br><span class="line">        if(cookies !=null)&#123;</span><br><span class="line">            for(Cookie cookie : cookies)&#123;</span><br><span class="line">                if(cookie.getName().equals(&quot;user&quot;)) userName = cookie.getValue();</span><br><span class="line">                if(cookie.getName().equals(&quot;JSESSIONID&quot;)) sessionID = cookie.getValue();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">            sessionID = session.getId();</span><br><span class="line">        &#125;</span><br><span class="line">        %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">h3</span>&gt;</span>Hi &lt;%=userName %&gt;, Login successful. Your Session ID=&lt;%=sessionID %&gt;<span class="tag">&lt;/<span class="name">h3</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        User=&lt;%=user %&gt;</span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- need to encode all the URLs where we want session information to be passed --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;&lt;%=response.encodeURL(&quot;</span><span class="attr">CheckoutPage.jsp</span>&quot;) %&gt;</span>&quot;&gt;Checkout Page<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;&lt;%=response.encodeURL(&quot;</span><span class="attr">LogoutServlet</span>&quot;) %&gt;</span>&quot; method=&quot;post&quot;&gt;</span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Logout&quot;</span> &gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>LogoutServlet.java的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.journaldev.servlet.session;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.servlet.ServletException;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.annotation.WebServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.Cookie;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServlet;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</span><br><span class="line"><span class="keyword">import</span> javax.servlet.http.HttpSession;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Servlet implementation class LogoutServlet</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@WebServlet(&quot;/LogoutServlet&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogoutServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">1L</span>;</span><br><span class="line">       </span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</span><br><span class="line">    	response.setContentType(<span class="string">&quot;text/html&quot;</span>);</span><br><span class="line">    	Cookie[] cookies = request.getCookies();</span><br><span class="line">    	<span class="keyword">if</span>(cookies != <span class="keyword">null</span>)&#123;</span><br><span class="line">    	<span class="keyword">for</span>(Cookie cookie : cookies)&#123;</span><br><span class="line">    		<span class="keyword">if</span>(cookie.getName().equals(<span class="string">&quot;JSESSIONID&quot;</span>))&#123;</span><br><span class="line">    			System.out.println(<span class="string">&quot;JSESSIONID=&quot;</span>+cookie.getValue());</span><br><span class="line">    		&#125;</span><br><span class="line">    		cookie.setMaxAge(<span class="number">0</span>);</span><br><span class="line">    		response.addCookie(cookie);</span><br><span class="line">    	&#125;</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="comment">//invalidate the session if exists</span></span><br><span class="line">    	HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">    	System.out.println(<span class="string">&quot;User=&quot;</span>+session.getAttribute(<span class="string">&quot;user&quot;</span>));</span><br><span class="line">    	<span class="keyword">if</span>(session != <span class="keyword">null</span>)&#123;</span><br><span class="line">    		session.invalidate();</span><br><span class="line">    	&#125;</span><br><span class="line">    	<span class="comment">//no encoding because we have invalidated the session</span></span><br><span class="line">    	response.sendRedirect(<span class="string">&quot;login.html&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当我们运行此项目时，在浏览器中禁用cookie，下面的图像显示响应页面，注意浏览器地址栏的URL中的jsessionid。 另请注意，在LoginSuccess页面上，用户名为null，因为浏览器未在最后一个响应中发送cookie发送。</p>
+<p><img src="/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-Login-Page.png"><br><img src="/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-LoginSuccess-Page-450x113.png"><br><img src="/assets/posts/Session-Management-in-Java/Servlet-URL-Rewriting-Checkout-Page-450x106.png"></p>
+<p>如果未禁用cookie，则不会在URL中看到jsessionid，因为在这种情况下Servlet会话API将使用cookie。</p>
+<h2 id="5-参考文档"><a href="#5-参考文档" class="headerlink" title="5. 参考文档"></a>5. 参考文档</h2><p><a target="_blank" rel="noopener" href="https://www.journaldev.com/1907/java-session-management-servlet-httpsession-url-rewriting">Session Management in Java – HttpServlet, Cookies, URL Rewriting</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaEE/" rel="tag"># JavaEE</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/02/Servelt-in-Java-EE/" rel="prev" title="Java EE(1) - Servelt in Java EE">
+      <i class="fa fa-chevron-left"></i> Java EE(1) - Servelt in Java EE
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/02/Java-Servlet-Filter/" rel="next" title="Java EE(3) - Java Servlet Filter">
+      Java EE(3) - Java Servlet Filter <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%BB%80%E4%B9%88%E6%98%AFSession"><span class="nav-number">1.</span> <span class="nav-text">1. 什么是Session</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Java%E4%B8%AD%E7%9A%84%E4%BC%9A%E8%AF%9D%E7%AE%A1%E7%90%86-Cookies"><span class="nav-number">2.</span> <span class="nav-text">2. Java中的会话管理 -Cookies</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Session-in-Java-HttpSession"><span class="nav-number">3.</span> <span class="nav-text">3. Session in Java -HttpSession</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E7%90%86%E8%A7%A3-JSESSIONID-Cookie"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 理解 JSESSIONID Cookie</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Session-Management-in-Java-Servlet-%E2%80%93-URL-Rewriting"><span class="nav-number">4.</span> <span class="nav-text">4. Session Management in Java Servlet – URL Rewriting</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">5.</span> <span class="nav-text">5. 参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Robinson</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Robinson</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
