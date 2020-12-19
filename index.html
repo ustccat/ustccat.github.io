@@ -145,6 +145,206 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/19/Mockito%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/19/Mockito%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/" class="post-title-link" itemprop="url">Mockito单元测试（二）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-12-19 13:38:32 / Modified: 13:58:51" itemprop="dateCreated datePublished" datetime="2020-12-19T13:38:32+08:00">2020-12-19</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="RunWith-注解"><a href="#RunWith-注解" class="headerlink" title="@RunWith 注解"></a>@RunWith 注解</h2><h3 id="RunWith的作用"><a href="#RunWith的作用" class="headerlink" title="@RunWith的作用"></a>@RunWith的作用</h3><p>@RunWith就是一个运行器</p>
+<p>@RunWith(JUnit4.class)就是指用JUnit4来运行</p>
+<p>@RunWith(SpringJUnit4ClassRunner.class),让测试运行于Spring测试环境</p>
+<p>@RunWith(Suite.class)的话就是一套测试集合</p>
+<p>备注：这里SpringRunner 继承了SpringJUnit4ClassRunner，没有扩展任何功能；使用前者，名字简短而已</p>
+<h3 id="特别看看-RunWith-SpringJunit4ClassRunner-class"><a href="#特别看看-RunWith-SpringJunit4ClassRunner-class" class="headerlink" title="特别看看@RunWith(SpringJunit4ClassRunner.class)"></a>特别看看@RunWith(SpringJunit4ClassRunner.class)</h3><p>使用RunWith注解改变JUnit的默认执行类，并实现自已的Listener在平时的单元测试，如果不使用RunWith注解，那么JUnit将会采用默认的执行类Suite执行，如下类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestClass</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Test</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">t1</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>JUnit允许用户指定其它的单元测试<strong>执行类</strong>，只需要我们的测试<strong>执行类</strong>继承类org.junit.runners.BlockJUnit4ClassRunner就可以了，Spring的执行类SpringJUnit4ClassRunner就是继承了该类。我们平时用Spring也比较多，为了能够更加方便的引用配置文件，我们单元测试就使用了Spring实现的执行类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RunWith(SpringJUnit4ClassRunner.class)</span></span><br><span class="line"><span class="meta">@ContextConfiguration(locations = &#123; &quot;classpath*:/spring1.xml&quot;, &quot;classpath*:/spring2.xml&quot; &#125;)</span></span><br><span class="line"><span class="meta">@TestExecutionListeners( &#123; DependencyInjectionTestExecutionListener.class, TransactionalTestExecutionListener.class &#125;)</span></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestClass</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Inject</span></span><br><span class="line">	<span class="comment">//这个类会在执行时被注入，这里是按类型注入，如果想按名称注入，需要加上@Named注解，如@Named(&quot;class1&quot;)</span></span><br><span class="line">	<span class="comment">//实现类可以加上@Named(&quot;class1&quot;)注解，也可以是配置在配置文件中的</span></span><br><span class="line">	Class1 class1;</span><br><span class="line">	</span><br><span class="line">	<span class="meta">@Test</span> </span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">t1</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面注解的解释如下:<br>@RunWith：这个是指定使用的单元测试执行类，这里就指定的是SpringJUnit4ClassRunner.class；</p>
+<p>@ContextConfiguration：这个指定Spring配置文件所在的路径，可以同时指定多个文件；</p>
+<p>@TestExecutionListeners：这个用于指定在测试类执行之前，可以做的一些动作，如这里的DependencyInjectionTestExecutionListener.class，就可以对一测试类中的依赖进行注入，TransactionalTestExecutionListener.class用于对事务进行管理；这两个都是Srping自带的； 我们也可以实现自己的Listener类来完成我们自己的操作，只需要继续类org.springframework.test.context.support.AbstractTestExecutionListener就可以了，具体可以参照DependencyInjectionTestExecutionListener.class的实现，后面我会贴出实例。 Listener实在实现类执行之前被执行、实现类的测试方法之前被执行，这与Listener的实现有关。</p>
+<p>@Transactional：这里的@Transactional不是必须的，这里是和@TestExecutionListeners中的TransactionalTestExecutionListener.class配合使用，用于保证插入的数据库中的测试数据，在测试完后，事务回滚，将插入的数据给删除掉，保证数据库的干净。如果没有显示的指定@Transactional，那么插入到数据库中的数据就是真实的插入了。</p>
+<h2 id="SpringBootTest注解"><a href="#SpringBootTest注解" class="headerlink" title="@SpringBootTest注解"></a>@SpringBootTest注解</h2><p>集成测试适用于继承应用的不同层组件，这意味着没有mock对象涉及其中。当我们需要启动整个容器时，@SpringBootTest注解是非常有用的。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>@RunWith(SpringRunner.class) : 使用这个注解是在单元测试时使用springboot的一些特性，如 @Autowired, @Mockbean…等</p>
+<blockquote>
+<p>is used to provide a bridge between Spring Boot test features and JUnit. Whenever we are using any Spring Boot testing features in our JUnit tests, this annotation will be required. </p>
+</blockquote>
+<p>@SpringBootTest注解：是用在集成测试中，加载整个应用上下文到容器中。</p>
+<blockquote>
+<p>The @SpringBootTest annotation can be used when we need to bootstrap the entire container. The annotation works by creating the ApplicationContext that will be utilized in our tests.</p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://www.baeldung.com/spring-boot-testing">Testing in Spring Boot</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/fenglibing/article/details/8584602">使用RunWith注解改变JUnit的默认执行类，并实现自已的Listener
+</a></li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/18/Mockito%E7%94%A8%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Robinson">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Road To Excelsior">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/18/Mockito%E7%94%A8%E6%B3%95/" class="post-title-link" itemprop="url">Mockito用法</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-18 13:58:12" itemprop="dateCreated datePublished" datetime="2020-12-18T13:58:12+08:00">2020-12-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-19 13:36:16" itemprop="dateModified" datetime="2020-12-19T13:36:16+08:00">2020-12-19</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="1-Mockito是什么？"><a href="#1-Mockito是什么？" class="headerlink" title="1.Mockito是什么？"></a>1.Mockito是什么？</h2><p>Mockito是一个非常不错的模拟框架。 它使您可以使用干净简单的API编写漂亮的测试。 Mockito不会给您带来麻烦，因为这些测试可读性强，并且会产生清晰的验证错误。<br>想象一下这样的一个常见的场景，当前要测试的类依赖于其它一些类对象时，如果用 Junit 来进行单元测试的话，我们就必须手动创建出这些依赖的对象，这其实是个比较麻烦的工作，此时就可以使用 Mockito 测试框架来模拟那些依赖的类，这些被模拟的对象在测试中充当真实对象的虚拟对象或克隆对象，而且 Mockito 同时也提供了方便的测试行为验证。这样就可以让我们更多地去关注当前测试类的逻辑，而不是它所依赖的对象。</p>
+<h2 id="2-生成Mock对象方式"><a href="#2-生成Mock对象方式" class="headerlink" title="2.生成Mock对象方式"></a>2.生成Mock对象方式</h2><h3 id="2-1-使用Mockito-mock-Clazz-方式-或者-Mock注解方式"><a href="#2-1-使用Mockito-mock-Clazz-方式-或者-Mock注解方式" class="headerlink" title="2.1 使用Mockito.mock(Clazz)方式 或者 @Mock注解方式"></a>2.1 使用Mockito.mock(Clazz)方式 或者 @Mock注解方式</h3><p>通过Mockito类的静态方法mock来创建mock对象，对对象中函数的调用均执行mock（即虚假函数），不执行真正部分。例如可以一下创建了一个List类型的Mock对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; mockList = Mockito.mock(ArrayList.class);</span><br></pre></td></tr></table></figure>
+
+<p>使用 @Mock注解方式来创建Mock对象，使用该方式创建对象需要在运行测试方法前使用MockitoAnnotation.initMock(this) 或者在单元测试类上加上 @ExtendWith(MockitoExtension.class)注解。如下所示代码创建了一个 List 类型的 Mock 对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Mock</span></span><br><span class="line">    <span class="keyword">private</span> List&lt;String&gt; mockList;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@BeforeEach</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">beforeEach</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        MockitoAnnotations.initMocks(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-使用-spy-方式-或者-Spy注解"><a href="#2-2-使用-spy-方式-或者-Spy注解" class="headerlink" title="2.2 使用 spy 方式 或者 @Spy注解"></a>2.2 使用 spy 方式 或者 @Spy注解</h3><p>spy 与mock不同，不同点是：</p>
+<ul>
+<li>spy 的参数是对象示例，mock 的参数是 class。</li>
+<li>被 spy 的对象，调用其方法时默认会走真实方法。mock 对象不会。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.junit.Assert;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.mockito.Mockito.*;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 测试 spy</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test_spy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        ExampleService spyExampleService = spy(<span class="keyword">new</span> ExampleService());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 默认会走真实方法</span></span><br><span class="line">        Assert.assertEquals(<span class="number">3</span>, spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 打桩后，不会走了</span></span><br><span class="line">        when(spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>)).thenReturn(<span class="number">10</span>);</span><br><span class="line">        Assert.assertEquals(<span class="number">10</span>, spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 但是参数比匹配的调用，依然走真实方法</span></span><br><span class="line">        Assert.assertEquals(<span class="number">3</span>, spyExampleService.add(<span class="number">2</span>, <span class="number">1</span>));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 测试 mock</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test_mock</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        ExampleService mockExampleService = mock(ExampleService.class);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 默认返回结果是返回类型int的默认值</span></span><br><span class="line">        Assert.assertEquals(<span class="number">0</span>, mockExampleService.add(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>spy 对应注解 @Spy，和 @Mock 是一样用的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.junit.Assert;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.mockito.MockitoAnnotations;</span><br><span class="line"><span class="keyword">import</span> org.mockito.Spy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.mockito.Mockito.*;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Spy</span></span><br><span class="line">    <span class="keyword">private</span> ExampleService spyExampleService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test_spy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        MockitoAnnotations.initMocks(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        Assert.assertEquals(<span class="number">3</span>, spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">        when(spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>)).thenReturn(<span class="number">10</span>);</span><br><span class="line">        Assert.assertEquals(<span class="number">10</span>, spyExampleService.add(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>对于@Spy，如果发现修饰的变量是 null，会自动调用类的无参构造函数来初始化。</p>
+<p>所以下面两种写法是等价的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 写法1</span></span><br><span class="line"><span class="meta">@Spy</span></span><br><span class="line"><span class="keyword">private</span> ExampleService spyExampleService;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 写法2</span></span><br><span class="line"><span class="meta">@Spy</span></span><br><span class="line"><span class="keyword">private</span> ExampleService spyExampleService = <span class="keyword">new</span> ExampleService();</span><br></pre></td></tr></table></figure>
+<p>如果没有无参构造函数，必须使用写法2。例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.junit.Assert;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.mockito.MockitoAnnotations;</span><br><span class="line"><span class="keyword">import</span> org.mockito.Spy;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ExampleService</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = a;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a+b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Spy</span></span><br><span class="line">    <span class="keyword">private</span> ExampleService spyExampleService = <span class="keyword">new</span> ExampleService(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test_spy</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        MockitoAnnotations.initMocks(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        Assert.assertEquals(<span class="number">3</span>, spyExampleService.add(<span class="number">2</span>));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-使用-InjectMocks-注解"><a href="#2-4-使用-InjectMocks-注解" class="headerlink" title="2.4 使用 @InjectMocks 注解"></a>2.4 使用 @InjectMocks 注解</h3><p>@InjectMocks 这个Mock可以调用真实代码的方法，其余用@Mock（或@Spy）注解创建的mock将被注入到该实例中。<br>参见：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/bb705a56f620">https://www.jianshu.com/p/bb705a56f620</a></p>
+<h2 id="3-验证性测试"><a href="#3-验证性测试" class="headerlink" title="3.验证性测试"></a>3.验证性测试</h2><p>Mockito 测试框架中提供了 Mockito.verify 静态方法让我们可以方便的进行验证性测试，比如方法调用验证、方法调用次数验证、方法调用顺序验证等，下面看看具体的代码。</p>
+<h3 id="3-1-验证方法单次调用"><a href="#3-1-验证方法单次调用" class="headerlink" title="3.1.验证方法单次调用"></a>3.1.验证方法单次调用</h3><p>验证方法单次调用的话直接 verify 方法后加上待验证调用方法即可，以下代码的功能就是验证 mockList 对象的 size 方法被调用一次。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoVerifyTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Mock</span></span><br><span class="line">    List&lt;String&gt; mockList;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">verify_SimpleInvocationOnMock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mockList.size(); <span class="comment">//方法调用</span></span><br><span class="line">        verify(mockList).size(); <span class="comment">//验证方法调用次数</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-验证方法调用指定次数"><a href="#3-2-验证方法调用指定次数" class="headerlink" title="3.2.验证方法调用指定次数"></a>3.2.验证方法调用指定次数</h3><p>除了验证单次调用，我们有时候还需要验证一些方法被调用多次或者指定的次数，那么此时就可以使用 verify + times 方法来验证方法调用指定次数，同时还可以结合 atLeast + atMost 方法来提供调用次数范围，同时还有 never 等方法验证不被调用等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoVerifyTest</span> </span>&#123;  </span><br><span class="line">    <span class="meta">@Mock</span>  </span><br><span class="line">    List&lt;String&gt; mockList; </span><br><span class="line">     </span><br><span class="line">    <span class="meta">@Test</span>  </span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">verify_NumberOfInteractionsWithMock</span><span class="params">( &#123;    </span></span></span><br><span class="line"><span class="function"><span class="params">        mockList.size()</span></span>;    </span><br><span class="line">        mockList.size();    </span><br><span class="line">        verify(mockList, times(<span class="number">2</span>)).size();</span><br><span class="line">        verify(mockList, atLeast(<span class="number">1</span>)).size();</span><br><span class="line">        verify(mockList, atMost(<span class="number">10</span>)).size();  </span><br><span class="line">    &#125;&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="3-2-验证方法调用顺序"><a href="#3-2-验证方法调用顺序" class="headerlink" title="3.2 验证方法调用顺序"></a>3.2 验证方法调用顺序</h3><p>可以使用 inOrder 方法来验证方法的调用顺序，下面示例验证 mockList 对象的 size、add 和 clear 方法的调用顺序。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoVerifyTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Mock</span></span><br><span class="line">    List&lt;String&gt; mockList;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">verify_OrderedInvocationsOnMock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mockList.size();</span><br><span class="line">        mockList.add(<span class="string">&quot;add a parameter&quot;</span>);</span><br><span class="line">        mockList.clear();</span><br><span class="line"></span><br><span class="line">        InOrder inOrder = inOrder(mockList);</span><br><span class="line">        inOrder.verify(mockList).size();</span><br><span class="line">        inOrder.verify(mockList).add(<span class="string">&quot;add a parameter&quot;</span>);</span><br><span class="line">        inOrder.verify(mockList).clear();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>###3.3 验证方法异常<br>Mockito提供了when(…).thenXXX(…)来让我们定义方法调用行为，以下代码定义了当调用mockMap的get方法无论传入任何参数都会抛出一个NPE异常，然后通过Assertions.assertThrows来验证调用结果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ExtendWith(MockitoExtension.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoExceptionTest</span> </span>&#123;  </span><br><span class="line"><span class="meta">@Mock</span>  </span><br><span class="line"><span class="keyword">public</span> Map&lt;String, Integer&gt; mockMap;  </span><br><span class="line"><span class="meta">@Test</span>  </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">whenConfigNonVoidReturnMethodToThrowEx_thenExIsThrown</span><span class="params">()</span> </span>&#123;    </span><br><span class="line">    when(mockMap.get(anyString())).thenThrow(NullPointerException.class);   </span><br><span class="line">    assertThrows(NullPointerException.class, () -&gt;    mockMap.get(<span class="string">&quot;mghio&quot;</span>)); </span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里有一点需要注意，使用以上这种方式定义的 mock 对象测试实际并不会影响到对象的内部状态,如下面的样例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MockitoTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Mock</span></span><br><span class="line">    List&lt;String&gt; mockList;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add_spyMockList_thenAffect</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mockList.add(<span class="string">&quot;mghio&quot;</span>);</span><br><span class="line">        assertEquals(<span class="number">0</span>, mockList.size());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然我们已经在 mockList 对象上调用了 add 方法，但是实际上 mockList 集合中并没有加入 mghio，这时候如果需要对 mock 对象<strong>有影响</strong>，那么需要使用 spy 方式来生成 mock 对象。</p>
+<h2 id="4-与Spring框架集成"><a href="#4-与Spring框架集成" class="headerlink" title="4.与Spring框架集成"></a>4.与Spring框架集成</h2><p>Mockito 框架提供了 @MockBean 注解用来将 mock 对象注入到 Spring 容器中，该对象会替换容器中任何现有的相同类型的 bean，该注解在需要模拟特定bean（例如外部服务）的测试场景中很有用。<br>如果使用的是 Spring Boot 2.0+ 并且当前容器中已有相同类型的 bean 的时候，需要设置 spring.main.allow-bean-definition-overriding 为 true（默认为 false）允许 bean 定义覆盖。下面假设要测试通过用户编码查询用户的信息，有一个数据库操作层的 UserRepository，也就是我们等下要 mock 的对象，定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Repository</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserRepository</span> </span>&#123;  </span><br><span class="line">    <span class="function">User <span class="title">findUserById</span><span class="params">(Long id)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还有用户操作的相关服务 UserService 类，其定义如下所示:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserService</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">private</span> UserRepository userRepository;          </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">UserService</span><span class="params">(UserRepository userRepository)</span> </span>&#123;    </span><br><span class="line">        <span class="keyword">this</span>.userRepository = userRepository;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> User <span class="title">findUserById</span><span class="params">(Long id)</span></span>&#123;    </span><br><span class="line">        <span class="keyword">return</span> userRepository.findUserById(id);  </span><br><span class="line">    &#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>在测试类中使用 @MockBean 来标注 UserRepository 属性表示这个类型的 bean 使用的是 mock 对象，使用 @Autowired 标注表示 UserService 属性使用的是 Spring 容器中的对象，然后使用 @SpringBootTest 启用 Spring 环境即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserServiceUnitTest</span> </span>&#123;  </span><br><span class="line"><span class="meta">@Autowired</span>  </span><br><span class="line"><span class="keyword">private</span> UserService userService;  </span><br><span class="line"><span class="meta">@MockBean</span>  </span><br><span class="line"><span class="keyword">private</span> UserRepository userRepository;  </span><br><span class="line"><span class="meta">@Test</span>  </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">whenUserIdIsProvided_thenRetrievedNameIsCorrect</span><span class="params">()</span> </span>&#123;    </span><br><span class="line">    User expectedUser = <span class="keyword">new</span> User(<span class="number">9527L</span>, <span class="string">&quot;mghio&quot;</span>, <span class="string">&quot;18288888880&quot;</span>);    </span><br><span class="line">    when(userRepository.findUserById(<span class="number">9527L</span>)).thenReturn(expectedUser);    </span><br><span class="line">    User actualUser =   userService.findUserById(<span class="number">9527L</span>);    </span><br><span class="line">    assertEquals(expectedUser, actualUser); </span><br><span class="line"> &#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-Mockito框架的工作原理"><a href="#5-Mockito框架的工作原理" class="headerlink" title="5.Mockito框架的工作原理"></a>5.Mockito框架的工作原理</h2><p> Mockito 非常容易使用并且可以方便的验证一些方法的行为，相信你已经看出来了，使用的步骤是先创建一个需要 mock 的对象 Target ，该对象如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Target</span> </span>&#123;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">foo</span><span class="params">(String name)</span> </span>&#123;    </span><br><span class="line">        <span class="keyword">return</span> String.format(<span class="string">&quot;Hello, %s&quot;</span>, name);  </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>然后直接调用Mockito.mock方法和 when().thenXXX()方法生成mock对象并指定方法调用时的行为，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test_foo</span><span class="params">()</span> </span>&#123;  </span><br><span class="line">    String expectedResult = <span class="string">&quot;Mocked mghio&quot;</span>;     </span><br><span class="line">    when(mockTarget.foo(<span class="string">&quot;mghio&quot;</span>)).thenReturn(expectedResult);  </span><br><span class="line">    String actualResult = mockTarget.foo(<span class="string">&quot;mghio&quot;</span>);  </span><br><span class="line">    assertEquals(expectedResult, actualResult);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>需要注意的是when()方法参数是方法的调用。是因为当我们调用 mock 对象的 foo 方法时，Mockito 会拦截方法的调用然后将方法调用的详细信息保存到 mock 对象的上下文中，当调用到 Mockito.when 方法时，实际上是从该上下文中获取最后一个注册的方法调用，然后把 thenReturn 的参数作为其返回值保存，然后当我们的再次调用 mock 对象的该方法时，之前已经记录的方法行为将被再次回放，该方法触发拦截器重新调用并且返回我们在 thenReturn 方法指定的返回值。简而言之，Mockito 框架通过方法拦截在上下文中存储和检索方法调用详细信息来工作的。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li><a target="_blank" rel="noopener" href="http://ifeve.com/%E4%B8%80%E6%96%87%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B-mockito-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6/">一文让你快速上手 Mockito 单元测试框架</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/bb705a56f620">@InjectMocks
+</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011047968/article/details/91970070?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control">Mockito的使用（二）——@InjectMocks、@Spy、@Mock
+</a></li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/16/hello-world/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -831,223 +1031,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2019/05/08/2018-10-14-html-css-mindmap/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Robinson">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Road To Excelsior">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/05/08/2018-10-14-html-css-mindmap/" class="post-title-link" itemprop="url">MindMap of html & css</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2019-05-08 15:53:10" itemprop="dateCreated datePublished" datetime="2019-05-08T15:53:10+08:00">2019-05-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-18 00:42:52" itemprop="dateModified" datetime="2020-12-18T00:42:52+08:00">2020-12-18</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h1><h2 id="HTML"><a href="#HTML" class="headerlink" title="HTML"></a>HTML</h2><h2 id="CSS"><a href="#CSS" class="headerlink" title="CSS"></a>CSS</h2><p>除了思维导图中需要了解的知识点，其中，需要注意的是CSS的结构和层叠，这个可在CSS权威指南第三章中找到，其主要包括特殊性，继承以及层叠。</p>
-<p><strong>继承(Inheritance)**是从一个元素向其后代元素传递属性值所采用的机制；确定应当向一个元素应用哪些值时，用户代理不仅需要考虑继承，还要考虑声明的特殊性，另外需要考虑声明本身的来源。这个过程就叫着</strong>层叠(cascade)**。</p>
-<h3 id="特殊性"><a href="#特殊性" class="headerlink" title="特殊性"></a>特殊性</h3><p>对于每条规则，用户代理会计算出选择器的特殊性，并将这些特殊性附加到规则中的各个声明。如果一个元素有两个或者多个冲突的属性声明，那么有最高特殊性的声明就会胜出。</p>
-<p>详情可见书中该章节内容；</p>
-<h3 id="继承"><a href="#继承" class="headerlink" title="继承"></a>继承</h3><p>继承是CSS中最基本的内容之一；需要注意的是，有一些属性不能继承，这往往归因于一个简单的常识，例如属性boarder就不会继承。<br>一般地，大多数框模型属性（包括外边距，内边距，背景和边框）都不能继承。</p>
-<p>同时，需要注意的是，继承的值没有特殊性，甚至连0特殊性都没有。</p>
-<h3 id="层叠"><a href="#层叠" class="headerlink" title="层叠"></a>层叠</h3><p>CSS2.1的层叠规则如下：</p>
-<ol>
-<li>找出所有相关的规则，这些规则都包含与一个给定的元素匹配的选择器；</li>
-<li>按<em>显示权重</em>对应用到该元素的所有声明进行排序。规则如下面所示；</li>
-<li>按<em>特殊性</em>对应用到给定元素的所有声明排序。有较高特殊性的元素权重要大于较低特殊性的元素；</li>
-<li>按出现顺序对应用到给定元素的所有声明排序。一个声明在样式表或文档中越后出现，它的权重远大。如果样式表中有导入的样式表，一般认为在导入样式表中的声明在前，主样式表中的所有声明在后。</li>
-</ol>
-<p>在声明权重方面需要考虑5级，权重有大至小的顺序依次为：</p>
-<ol>
-<li>读者的重要声明</li>
-<li>创作人员的重要声明</li>
-<li>创作人员的正常声明</li>
-<li>读者的正常声明</li>
-<li>用户代理的声明</li>
-</ol>
-<h2 id="总结和思考"><a href="#总结和思考" class="headerlink" title="总结和思考"></a>总结和思考</h2><h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
-<li><a href="/assets/posts/html-css/HTML+CSS.itmz">html+css思维导图</a></li>
-<li>《CSS权威指南(第三版)》</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2019/05/08/2018-10-18-CGLib/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Robinson">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Road To Excelsior">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/05/08/2018-10-18-CGLib/" class="post-title-link" itemprop="url">cglib</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2019-05-08 15:53:10" itemprop="dateCreated datePublished" datetime="2019-05-08T15:53:10+08:00">2019-05-08</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h1><blockquote>
-<p>cglib - Byte Code Generation Library is high level API to generate and transform Java byte code. It is used by AOP, testing, data access frameworks to generate dynamic proxy objects and intercept field access.</p>
-</blockquote>
-<p>简单来说，cglib是一个Java 字节码生成器。其可以被用在AOP，测试，数据获取框架中去生成 <strong>动态代理对象</strong> 以及拦截获取字段。</p>
-<h2 id="1-Toast"><a href="#1-Toast" class="headerlink" title="1. Toast"></a>1. Toast</h2><p>一如以前，从一个实际的例子出发，我们定义了一个简单的Cglib的demo，来观察其外在的表现。<br>首先定义了一个要代理的类：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Dao</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Object Dao update&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">select</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Dao object select&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后为其创建一个代理，通过实现MethodInterceptor接口，为其在方法调用前后记录一些东西：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaoProxy</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object o, Method method, Object[] objects, MethodProxy methodProxy)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;before method invoke&quot;</span>);</span><br><span class="line">        methodProxy.invokeSuper(o, objects);</span><br><span class="line">        System.out.println(<span class="string">&quot;After method invoke&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> o;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在写一个简单的测试类，来打印AOP拦截的输出：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaoTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCglib</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        DaoProxy daoProxy = <span class="keyword">new</span> DaoProxy();</span><br><span class="line"></span><br><span class="line">        Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">        enhancer.setSuperclass(Dao.class);</span><br><span class="line">        enhancer.setCallback(daoProxy);</span><br><span class="line"></span><br><span class="line">        Dao dao = (Dao) enhancer.create();</span><br><span class="line">        dao.update();</span><br><span class="line">        dao.select();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其结果打印如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">before method invoke</span><br><span class="line">Object Dao update</span><br><span class="line">After method invoke</span><br><span class="line">before method invoke</span><br><span class="line">Dao object select</span><br><span class="line">After method invoke</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-初识"><a href="#2-初识" class="headerlink" title="2.初识"></a>2.初识</h2><p>现在，来观察方法拦截器接口的定义：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * General-purpose &#123;<span class="doctag">@link</span> Enhancer&#125; callback which provides for &quot;around advice&quot;.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Juozas Baliuka &lt;a href=&quot;mailto:baliuka@mwm.lt&quot;&gt;baliuka@mwm.lt&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@version</span> $Id: MethodInterceptor.java,v 1.8 2004/06/24 21:15:20 herbyderby Exp $</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MethodInterceptor</span></span></span><br><span class="line"><span class="class"><span class="keyword">extends</span> <span class="title">Callback</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * All generated proxied methods call this method instead of the original method.</span></span><br><span class="line"><span class="comment">     * The original method may either be invoked by normal reflection using the Method object,</span></span><br><span class="line"><span class="comment">     * or by using the MethodProxy (faster).</span></span><br><span class="line"><span class="comment">     * 所有生成的代理方法会调用这个方法，而不是原始的方法。原始的方法可能会通过使用方法对象进行正常的反射操作；或者使用方法代理对象（这样更快些）。</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> obj &quot;this&quot;, the enhanced object：增强的对象</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> method intercepted Method：拦截的方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args argument array; primitive types are wrapped：参数数组，原始类型需要被封装</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> proxy used to invoke super (non-intercepted method); may be called</span></span><br><span class="line"><span class="comment">     * as many times as needed：被用来调用父（没有拦截的方法）；可能会被调用多次</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> Throwable any exception may be thrown; if so, super method will not be invoked</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> any value compatible with the signature of the proxied method. Method returning void will ignore this value.</span></span><br><span class="line"><span class="comment">     * 返回：任何与代理方法签名兼容的值。方法返回void则会忽略这个值。</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> MethodProxy</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object obj, java.lang.reflect.Method method, Object[] args,</span></span></span><br><span class="line"><span class="function"><span class="params">                               MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>需要注意的是，Cglib还是提供了若干个其他的回调类型（见Callback的注释）。如：</p>
-<ol>
-<li>@see MethodInterceptor</li>
-<li>@see NoOp</li>
-<li>@see LazyLoader</li>
-<li>@see Dispatcher</li>
-<li>@see InvocationHandler</li>
-<li>@see FixedValue</li>
-</ol>
-<p>在完成了对方法的拦截之后，Demo在测试中调用了Enhancer对象来完成代理类的创建。至于创建一个代理，至少需要一个 <strong>被代理类</strong>。在Demo中，新建了一个Enhancer对象，然后分别设置了代理类和回调。分别看一下各自的源代码及其注释：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Set the class which the generated class will extend. As a convenience,</span></span><br><span class="line"><span class="comment">     * if the supplied superclass is actually an interface, &lt;code&gt;setInterfaces&lt;/code&gt;</span></span><br><span class="line"><span class="comment">     * will be called with the appropriate argument instead.</span></span><br><span class="line"><span class="comment">     * A non-interface argument must not be declared as final, and must have an</span></span><br><span class="line"><span class="comment">     * accessible constructor.</span></span><br><span class="line"><span class="comment">     * 设置将被扩展的已产生类的类。为方便起见，如果提供的超类是一个借口，setInterfaces将会被调用。</span></span><br><span class="line"><span class="comment">     * 一个非接口参数（类）不能被声明为final，而且必须有可访问的构造器。</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> superclass class to extend or interface to implement</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@see</span> #setInterfaces(Class[])</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSuperclass</span><span class="params">(Class superclass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (superclass != <span class="keyword">null</span> &amp;&amp; superclass.isInterface()) &#123;</span><br><span class="line">            setInterfaces(<span class="keyword">new</span> Class[]&#123; superclass &#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (superclass != <span class="keyword">null</span> &amp;&amp; superclass.equals(Object.class)) &#123;</span><br><span class="line">            <span class="comment">// affects choice of ClassLoader</span></span><br><span class="line">            <span class="keyword">this</span>.superclass = <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.superclass = superclass;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>如注释所示：这个方法设置将被扩展的已产生类的类。为方便起见，如果提供的超类是一个接口，setInterfaces将会被调用。一个非接口参数（类）不能被声明为final，而且必须有可访问的构造器。</p>
-<p>在来看设置回调的方法setCallback, Callback可以理解成生成的代理类的方法被调用时（比如说调用person.sayHello()时），会执行的逻辑：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Set the array of callbacks to use.</span></span><br><span class="line"><span class="comment"> * Ignored if you use &#123;<span class="doctag">@link</span> #createClass&#125;.</span></span><br><span class="line"><span class="comment"> * You must use a &#123;<span class="doctag">@link</span> CallbackFilter&#125; to specify the index into this</span></span><br><span class="line"><span class="comment"> * array for each method in the proxied class.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> callbacks the callback array</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #setCallbackFilter</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #setCallback</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setCallbacks</span><span class="params">(Callback[] callbacks)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (callbacks != <span class="keyword">null</span> &amp;&amp; callbacks.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;Array cannot be empty&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.callbacks = callbacks;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>翻译一下注释，即设置要使用的callbacks数组，必须使用一个CallbackFilter来指定进入数据的索引，为每一个代理类中的方法。</p>
-<p>为了验证Filter功能，新建一个filter类，来进行方法的分门别类的过滤。首先，先新建一个拦截器：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaoAnotherProxy</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object obj, Method method, Object[] args, MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;call time: &quot;</span> + System.currentTimeMillis());</span><br><span class="line">        <span class="comment">//method.invoke(obj, args);</span></span><br><span class="line">        proxy.invokeSuper(obj, args);</span><br><span class="line">        System.out.println(<span class="string">&quot;end call time: &quot;</span> + System.currentTimeMillis());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> obj;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里我使用反射方式来进行调用时，出现了问题，但是不是我这次的重点，暂搁置。然后，创建了一个Callback的过滤器来对callback进行过滤：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MethodFilter</span> <span class="keyword">implements</span> <span class="title">CallbackFilter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> UPDATE = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SELECT = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">accept</span><span class="params">(Method method)</span> </span>&#123;</span><br><span class="line">        String name = method.getName();</span><br><span class="line">        <span class="keyword">if</span>(name.equals(<span class="string">&quot;update&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> UPDATE;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> SELECT;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>同时，修改enhancer实例，设置过滤器：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaoTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testCglib</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        DaoProxy daoProxy = <span class="keyword">new</span> DaoProxy();</span><br><span class="line">        DaoAnotherProxy daoAnotherProxy = <span class="keyword">new</span> DaoAnotherProxy();</span><br><span class="line">        MethodFilter methodFilter = <span class="keyword">new</span> MethodFilter();</span><br><span class="line"></span><br><span class="line">        Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">        enhancer.setSuperclass(Dao.class);</span><br><span class="line">        enhancer.setCallbacks(<span class="keyword">new</span> Callback[]&#123;daoProxy, daoAnotherProxy&#125;);</span><br><span class="line">        enhancer.setCallbackFilter(methodFilter);</span><br><span class="line">        ....</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行结果如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">before method invoke</span><br><span class="line">Object Dao update</span><br><span class="line">After method invoke</span><br><span class="line">call time: 1539921398539</span><br><span class="line">Dao object select</span><br><span class="line">end call time: 1539921398539</span><br></pre></td></tr></table></figure>
-
-<p>如结果所示，通过过滤器，实现了对同一个类中不同方法的不同拦截。</p>
-<h2 id="3-cglib功能总结"><a href="#3-cglib功能总结" class="headerlink" title="3.cglib功能总结"></a>3.cglib功能总结</h2><p>因为我目前对Java 动态代理不是很熟悉，所以不好对比两种技术的差别在哪里。从目前的样例分析来看，cglib作为一种代码生成库，其可以通过Enhencer这个类来完成生成 <strong>动态的子类</strong>，以达到方法级别拦截的目的。</p>
-<p>这个类是作为标准动态代理（其允许代理继承一个实体基类，也允许实现接口）的替代品从jdk1.3开始支持的。动态生成的子类重写了超类中non-final的方法，同时有钩子回调用户定义的拦截器实现。</p>
-<p>其中关于MethodInterceptor回调功能为：</p>
-<blockquote>
-<p>The original and most general callback type is the {@link MethodInterceptor}, which<br> in AOP terms enables “around advice”–that is, you can invoke custom code both before<br> and after the invocation of the “super” method. In addition you can modify the<br> arguments before calling the super method, or not call it at all.</p>
-</blockquote>
-<p>同时为了支持同一个代理类中多个回调的功能，提供了CallbackFilter：</p>
-<blockquote>
-<p>Although <code>MethodInterceptor</code> is generic enough to meet any<br>interception need, it is often overkill. For simplicity and performance, additional<br>specialized callback types, such as {@link LazyLoader} are also available.<br>Often a single callback will be used per enhanced class, but you can control<br>which callback is used on a per-method basis with a {@link CallbackFilter}.</p>
-</blockquote>
-<p>同时，需要注意一下Enhencer的另外一个特性Factory: </p>
-<blockquote>
-<p>All enhanced objects implement the {@link Factory} interface, unless {@link #setUseFactory} is<br>used to explicitly disable this feature. The <code>Factory</code> interface provides an API<br>to change the callbacks of an existing object, as well as a faster and easier way to create<br>new instances of the same type.</p>
-</blockquote>
-<p>上面的意思是，除非显示的关掉这个Factory特性，否则这个借口提供了API去改变存在的对象的回调行为，同时也提供了一种更快，更简单创建实例的方式。</p>
-<h2 id="4-总结和思考"><a href="#4-总结和思考" class="headerlink" title="4.总结和思考"></a>4.总结和思考</h2><p>CGLIB是一个强大的高性能的代码生成库。作为JDK动态代理的互补，它对于那些没有实现接口的类提供了代理方案。在底层，它使用ASM字节码操纵框架。本质上来说，CGLIB通过产生子类覆盖非final方法来进行代理。它比使用Java反射的JDK动态代理方法更快。CGLIB不能代理一个final类或者final方法。通常来说，你可以使用JDK动态代理方法来创建代理，对于没有接口的情况或者性能因素，CGLIB是一个很好的选择。</p>
-<p>第一个问题：cglib代码生成库在Spring AOP的应用是怎么样的？分别应用在哪些点，以及其实如何完成这个过程的。</p>
-<h2 id="5-参考文档"><a href="#5-参考文档" class="headerlink" title="5.参考文档"></a>5.参考文档</h2><ol>
-<li>cglib source code;</li>
-<li><a target="_blank" rel="noopener" href="http://ifeve.com/cglib-desc/">CGLIB动态代理介绍</a></li>
-<li><a target="_blank" rel="noopener" href="https://dzone.com/articles/cglib-missing-manual">CGLib: The Missing Manual</a></li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1117,7 +1100,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">29</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
